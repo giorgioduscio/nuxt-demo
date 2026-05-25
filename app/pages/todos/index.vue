@@ -1,9 +1,5 @@
 <script setup lang="ts">
-interface Todo {
-  id: number
-  text: string
-  completed: boolean
-}
+import type { Todo } from './todos_schema'
 
 const todos = ref<Todo[]>([])
 const newTodo = ref('')
@@ -49,11 +45,10 @@ const completedCount = computed(() => todos.value.filter(t => t.completed).lengt
   <div class="container py-5">
     <div class="row justify-content-center">
       <div class="col-md-6">
-        <div class="card shadow">
-          <div class="card-header bg-primary text-white">
-            <h3 class="card-title mb-0">My Tasks</h3>
-          </div>
-          <div class="card-body">
+
+        <div class="border rounded shadow overflow-hidden">
+          <div class="p-3 pb-1 text-bg-primary">
+            <h3>My Tasks</h3>
             <div class="input-group mb-3">
               <input 
                 v-model="newTodo" 
@@ -62,19 +57,22 @@ const completedCount = computed(() => todos.value.filter(t => t.completed).lengt
                 class="form-control" 
                 placeholder="What needs to be done?"
               >
-              <button @click="addTodo" class="btn btn-primary" type="button">Add</button>
+              <button @click="addTodo" class="btn btn-info" type="button">
+                <span class="bi bi-plus-lg">Add</span>
+              </button>
+            </div>
+          </div>
+          
+          <div class="p-3 bg-blur">
+            <div v-if="todos.length === 0" class="m-0 alert alert-warning text-center">
+              <i class="bi bi-info-circle me-2"></i>
+              <span>No tasks yet. Enjoy your day!</span>
             </div>
 
-            <div v-if="todos.length === 0" class="text-center py-4 text-muted">
-              <p class="mb-0">No tasks yet. Enjoy your day!</p>
-            </div>
-
-            <ul class="list-group list-group-flush">
-              <li 
-                v-for="todo in todos" 
-                :key="todo.id" 
-                class="list-group-item d-flex justify-content-between align-items-center"
-              >
+            <ul class="m-0 p-0">
+              <li v-for="todo in todos" 
+                  :key="todo.id" 
+                  class="my-1 d-flex justify-content-between align-items-center">
                 <div class="form-check">
                   <input 
                     class="form-check-input" 
@@ -85,33 +83,29 @@ const completedCount = computed(() => todos.value.filter(t => t.completed).lengt
                   >
                   <label 
                     class="form-check-label" 
-                    :class="{ 'text-decoration-line-through text-muted': todo.completed }"
+                    :class="{ 'text-decoration-line-through': todo.completed }"
                     :for="'todo-' + todo.id"
                   >
                     {{ todo.text }}
                   </label>
                 </div>
-                <button @click="removeTodo(todo.id)" class="btn btn-link text-danger p-0">
-                  <span class="fs-4">&times;</span>
-                </button>
+                <button @click="removeTodo(todo.id)" class="btn btn-danger btn-sm bi bi-x-lg"></button>
               </li>
             </ul>
           </div>
-          <div v-if="todos.length > 0" class="card-footer d-flex justify-content-between align-items-center bg-light">
-            <small class="text-muted">{{ completedCount }} of {{ todos.length }} completed</small>
+          <div v-if="todos.length > 0" class="p-3 text-bg-secondary d-flex justify-content-between align-items-center">
+            <small>{{ completedCount }} of {{ todos.length }} completed</small>
             <button 
               v-if="completedCount > 0" 
               @click="clearCompleted" 
-              class="btn btn-sm btn-outline-danger"
+              class="btn btn-sm btn-danger"
             >
               Clear Completed
             </button>
           </div>
         </div>
+
       </div>
     </div>
   </div>
 </template>
-
-<style lang="sass" scoped>
-</style>
