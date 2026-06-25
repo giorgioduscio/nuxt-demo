@@ -1,44 +1,49 @@
 <script setup lang="ts">
 import type { Todo } from './todos_schema'
+import { todosStore } from './todosStore';
 
-const todos = ref<Todo[]>([])
-const newTodo = ref('')
+const todos ={
+  list: ref<Todo[]>([]),
+  input: ref(''),
+  
+  handleAdd(){
+    if (todos.input.value.trim() === '') return console.error("Valore non valido");
+    todosStore.create(todos.input.value)
+    .then((newTodo)=>{
+      todos.list.value.push(newTodo);
+      todos.input.value = '';
+    })
+    .catch(e=> console.error(e))
+  },
 
-onMounted(() => {
-  const saved = localStorage.getItem('todos')
-  if (saved) {
-    todos.value = JSON.parse(saved)
+  async handleDelete(id: number){
+    await todosStore.delete(id)
+    todos.list.value = todos.list.value.filter(t => t.id !== id)
+  },
+
+  async handleToggle(id: number){
+    const target = todos.list.value.find(t => t.id === id);
+    if (!target) return console.error("Todo non trovato");
+    
+    target.completed = !target.completed;
+    await todosStore.update(target)
+  },
+  
+  async clearCompleted(){
+    const targets = todos.list.value.filter(t => t.completed);
+    for(const todo of targets){
+      await todosStore.delete(todo.id);
+    }
+    todos.list.value = todos.list.value.filter(t => !t.completed)
   }
+}
+
+const todos_completedCount = computed(() => todos.list.value.filter(t => t.completed).length)
+
+onMounted(async () => {
+  todos.list.value = await todosStore.read_all()
+  document.title ='Todos';
 })
-
-watch(todos, (newVal) => {
-  localStorage.setItem('todos', JSON.stringify(newVal))
-}, { deep: true })
-
-const addTodo = () => {
-  if (newTodo.value.trim() === '') return
-  todos.value.push({
-    id: Date.now(),
-    text: newTodo.value,
-    completed: false
-  })
-  newTodo.value = ''
-}
-
-const removeTodo = (id: number) => {
-  todos.value = todos.value.filter(t => t.id !== id)
-}
-
-const toggleTodo = (id: number) => {
-  const todo = todos.value.find(t => t.id === id)
-  if (todo) todo.completed = !todo.completed
-}
-
-const clearCompleted = () => {
-  todos.value = todos.value.filter(t => !t.completed)
-}
-
-const completedCount = computed(() => todos.value.filter(t => t.completed).length)
 </script>
 
 <template>
@@ -46,62 +51,65 @@ const completedCount = computed(() => todos.value.filter(t => t.completed).lengt
     <div class="row justify-content-center">
       <div class="col-md-6">
 
+        <!-- HEADER -->
         <div class="border rounded shadow overflow-hidden">
           <div class="p-3 pb-1 text-bg-primary">
             <h3>My Tasks</h3>
             <div class="input-group mb-3">
               <input 
-                v-model="newTodo" 
-                @keyup.enter="addTodo" 
+                v-model="todos.input.value" 
+                @keyup.enter="todos.handleAdd" 
                 type="text" 
                 class="form-control" 
                 placeholder="What needs to be done?"
               >
-              <button @click="addTodo" class="btn btn-info" type="button">
+              <button @click="todos.handleAdd" class="btn btn-info" type="button">
                 <span class="bi bi-plus-lg">Add</span>
               </button>
             </div>
           </div>
           
+          <!-- LIST -->
           <div class="p-3 bg-blur">
-            <div v-if="todos.length === 0" class="m-0 alert alert-warning text-center">
+            <div v-if="todos.list.value.length === 0" class="m-0 alert alert-warning text-center">
               <i class="bi bi-info-circle me-2"></i>
               <span>No tasks yet. Enjoy your day!</span>
             </div>
 
-            <ul class="m-0 p-0">
-              <li v-for="todo in todos" 
+            <ul class="m-0 p-0" v-else>
+              <li v-for="todo in todos.list.value" 
                   :key="todo.id" 
-                  class="my-1 d-flex justify-content-between align-items-center">
-                <div class="form-check">
-                  <input 
-                    class="form-check-input" 
-                    type="checkbox" 
-                    :checked="todo.completed" 
-                    @change="toggleTodo(todo.id)"
-                    :id="'todo-' + todo.id"
-                  >
-                  <label 
-                    class="form-check-label" 
-                    :class="{ 'text-decoration-line-through': todo.completed }"
-                    :for="'todo-' + todo.id"
-                  >
-                    {{ todo.text }}
-                  </label>
-                </div>
-                <button @click="removeTodo(todo.id)" class="btn btn-danger btn-sm bi bi-x-lg"></button>
+                  class="my-1 d-flex gap-2 justify-content-between align-items-center">
+                
+                <label class="visually-hidden" :for="'todo-' + todo.id">{{ todo.text }}</label>
+                <input class="form-check-input" 
+                      type="checkbox" 
+                      :checked="todo.completed" 
+                      @change="todos.handleToggle(todo.id)"
+                      :id="'todo-' + todo.id"
+                      :name="'todo-' + todo.id">
+  
+                <label :for="todo.id+'-text'" class="visually-hidden">Edit todo</label>
+                <input type="text" :title="todo.text"
+                      class="form-control form-control-sm"
+                      :name="todo.id+'-text'" 
+                      :id="todo.id+'-text'" 
+                      @blur="todosStore.update(todo)"
+                      v-model="todo.text">
+
+                <button @click="todos.handleDelete(todo.id)" class="btn btn-danger btn-sm">
+                  <i class="bi bi-x-lg"></i>
+                </button>
               </li>
             </ul>
           </div>
-          <div v-if="todos.length > 0" class="p-3 text-bg-secondary d-flex justify-content-between align-items-center">
-            <small>{{ completedCount }} of {{ todos.length }} completed</small>
+          <div v-if="todos.list.value.length > 0" class="p-3 text-bg-secondary d-flex justify-content-between align-items-center">
+            <small>{{ todos_completedCount }} of {{ todos.list.value.length }} completed</small>
             <button 
-              v-if="completedCount > 0" 
-              @click="clearCompleted" 
+              v-if="todos_completedCount > 0" 
+              @click="todos.clearCompleted" 
               class="btn btn-sm btn-danger"
-            >
-              Clear Completed
-            </button>
+            >Clear Completed</button>
           </div>
         </div>
 

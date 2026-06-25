@@ -3,7 +3,7 @@
     min-height: 100vh
     background: linear-gradient(135deg, #333, #764ba2)
 
-  </style>
+</style>
 <template>
   <div class="layout text-white">
     <Navbar />

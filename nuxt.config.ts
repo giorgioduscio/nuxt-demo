@@ -13,4 +13,13 @@ export default defineNuxtConfig({
       },
     },
   },
+  nitro: {
+    storage: {
+      // 'todos' è il nome del nostro storage nativo
+      todos: {
+        driver: 'fs',
+        base: './.data/todos'
+      }
+    }
+  }
 })
