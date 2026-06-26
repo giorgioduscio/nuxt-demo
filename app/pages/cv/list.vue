@@ -4,9 +4,12 @@ definePageMeta({
   description: 'Lista dei CV',
   icon: 'file-text'
 })
+onMounted(()=>{
+  document.title = 'CV List';
+})
 </script>
 <template>
-    <div class="container">
-        <h1>CV List</h1>
-    </div>
+  <div class="container">
+    <h1>CV List</h1>
+  </div>
 </template>

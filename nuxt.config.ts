@@ -1,3 +1,4 @@
+// configurazione del progetto (nitro, vite, css, etc.)
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
@@ -16,11 +17,14 @@ export default defineNuxtConfig({
   },
   nitro: {
     storage: {
-      // 'todos' è il nome del nostro storage nativo
       todos: {
         driver: 'fs',
         base: './.data/todos'
-      }
+      },
+      cv: {
+        driver: 'fs',
+        base: './.data/cv'
+      },
     }
   }
 })

@@ -3,6 +3,9 @@ const { $bootstrap } = useNuxtApp()
 const routes = useRouter().getRoutes() .filter(route=>
   route.meta?.title && route.meta?.title!=="Home"
 );
+function isActive(route) {
+  return route.path === useRoute().path
+}
 
 const closeOffcanvas =()=> {
   const offcanvasElement = document.getElementById('offcanvasNavbar')
@@ -15,9 +18,9 @@ const closeOffcanvas =()=> {
 }
 </script>
 <template>
-  <div style="padding-top: 2.8rem;">
+  <div style="padding-top: 3.5rem;">
     <nav class="p-0 navbar navbar-expand-sm fixed-top shadow bg-dark z-3" data-bs-theme="dark">
-      <div class="container">
+      <div class="p-2 container">
 
         <!-- BURGER BUTTON FOR OFFCANVAS (MOBILE ONLY) -->
         <button class="navbar-toggler d-md-none"
@@ -56,10 +59,11 @@ const closeOffcanvas =()=> {
               <li v-for="route in routes" :key="route.path" class="nav-item">
                   <NuxtLink class="nav-link text-white"
                             :to="route.path"
-                            :class="{ active: route.active }"
-                            :aria-current="route.active ? 'page' : null"
+                            :aria-current="isActive(route) ? 'page' : null"
                             @click="closeOffcanvas()">
-                            {{ route.meta?.title }}
+                            <span :class="{ 'text-info fw-bold': isActive(route) }">
+                              {{ route.meta?.title }}
+                            </span>
                   </NuxtLink>
                 </li>
 
@@ -68,9 +72,9 @@ const closeOffcanvas =()=> {
         </div>
 
         <!-- PROFILE LINK -->
-        <NuxtLink to="/profile" class="nav-link text-white">
+        <NuxtLink to="/cv/list" class="nav-link text-white">
           <i class="bi bi-person-circle"></i>
-          <span class="d-none d-md-inline">Profilo</span>
+          <span class="ms-2 d-none d-md-inline">Cv List</span>
         </NuxtLink>
 
       </div>
