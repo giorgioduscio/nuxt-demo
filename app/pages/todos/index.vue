@@ -44,6 +44,11 @@ onMounted(async () => {
   todos.list.value = await todosStore.read_all()
   document.title ='Todos';
 })
+definePageMeta({
+  title: 'Todos',
+  description: 'Lista dei Todo',
+  icon: 'list'
+})
 </script>
 
 <template>
