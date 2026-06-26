@@ -23,6 +23,7 @@ The easiest way to run this project is using Docker Compose. This ensures a cons
 3. Run the following command:
    ```bash
    docker-compose up --build
+   ./prompt.sh # fast access to container prompt
    ```
 4. Open your browser and go to [http://localhost:3000](http://localhost:3000).
 
