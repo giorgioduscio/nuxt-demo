@@ -1,5 +1,6 @@
 export interface CV {
   id: number;
+  type: string;
 
   title: string;
   subtitle: string;
@@ -11,21 +12,13 @@ export interface CV {
   phone: string;
   address: string;
 
-  contacts: { [key:string]: string };
+  contacts: {    title:string, description:string }[];
+  soft_skills: { title:string, description:string }[];
+  hobby: {       title:string, description:string }[];
 
   hard_skills: {
     title: string, 
     level: string, 
-    description: string
-  }[];
-
-  soft_skills: {
-    title: string, 
-    description: string
-  }[];
-  
-  hobby: {
-    title: string, 
     description: string
   }[];
   

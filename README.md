@@ -59,5 +59,3 @@ nuxt-vue-demo/
 - **Nuxt 4 Ready**: Leveraging the `app/` directory structure for forward compatibility.
 
 ---
-
-
