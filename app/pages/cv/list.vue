@@ -45,7 +45,7 @@ onMounted(()=>{
     </form>
 
     <!-- CV CARDS -->
-    <div class="pb-5 row g-3">
+    <div class="pb-5 row g-3 justify-content-center">
       <div class="col-12">
         <div v-if="filteredCvs?.length === 0" class="alert alert-info">
           <i class="bi bi-info-circle"></i>  Nessun CV trovato
