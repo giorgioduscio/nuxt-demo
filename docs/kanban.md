@@ -12,7 +12,8 @@
 
 * [3] Scrivere test backend (API) (2 ore)
   - DoD: Test per CRUD CV, validazione dati.
-* [4] Implementare modello CV "Classico" (2-3 ore)
+* [3] Implementare valibot per la validazione dei dati
+* [5] Implementare modello CV "Classico" (2-3 ore)
   - DoD: Modello visualizzabile, responsive.
 * [5] Implementare modello CV "Moderno" (2-3 ore)
 * [5] Implementare modello CV "Creativo" (3-4 ore)
@@ -35,3 +36,4 @@
 ## ✅ Done
 * Creare lista CV
 * Implementare form CV
+* Implementare README e home page
