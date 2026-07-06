@@ -1,13 +1,12 @@
 # Kanban - CV Generator (Nuxt.ts)
 
 ## 📌 To Do
-* **WIP** [1] Implementare modello CV "Minimalista" (3-4 ore)
-  - DoD: Modello visualizzabile e modificabile, responsive, senza errori in console.
-* [1] Scrivere test frontend (form) (2-3 ore) (Dipende da: Implementare modello CV Minimalista)
+
+* [1] Scrivere test frontend (form) (2-3 ore)
   - DoD: Test passano su Chrome/Firefox, copertura >80%.
-* [2] Testare UX manualmente (1 ora) (Dipende da: Implementare almeno 1 modello CV)
-  - DoD: Feedback da 1 utente esterno, nessuna criticità maggiore.
-* [2] Esportazione PDF del modello (2 ore) (Dipende da: Implementare almeno 1 modello CV)
+* [2] Implementare salvataggio realtime con debouncing
+  - DoD: Salvataggio automatico quando l'utente smette di digitare, nessun errore in console.
+* [2] Esportazione PDF del modello (2 ore)
   - DoD: PDF generato correttamente, senza errori.
 
 * [3] Scrivere test backend (API) (2 ore)
@@ -37,3 +36,4 @@
 * Creare lista CV
 * Implementare form CV
 * Implementare README e home page
+* Implementare modello CV "Minimalista"

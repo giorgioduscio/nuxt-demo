@@ -54,7 +54,7 @@ onMounted(()=>{
 </script>
 
 <template>
-  <div class="container mt-4">
+  <section class="container mt-4 shadow rounded">
     <!-- HEADER -->
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h1>CV List</h1>
@@ -88,7 +88,9 @@ onMounted(()=>{
 
       <div v-for="cv in filteredCvs" :key="cv.id" class="col-md-4 col-lg-3">
         <div class="text-bg-dark shadow rounded overflow-hidden position-relative">
-          <img class="w-100" src="@/assets/modello_1.png" alt="Tipo di cv">
+          <NuxtLink :to="`/cv/${cv.id}?preview`">
+            <img class="w-100" src="@/assets/modello_1.png" alt="Tipo di cv" style="cursor: pointer;">
+          </NuxtLink>
 
           <div class="pt-5 w-100 position-absolute bottom-0 bg-gradient">
             <div class="p-2 d-flex justify-content-between">
@@ -100,7 +102,7 @@ onMounted(()=>{
                 </button>
                 <ul class="p-0 dropdown-menu overflow-hidden">
                   <li>
-                    <NuxtLink class="dropdown-item text-bg-primary" :to="`/cv/edit/${cv.id}`">
+                    <NuxtLink class="dropdown-item text-bg-primary" :to="`/cv/${cv.id}`">
                       <i class="bi bi-pencil"></i> Modifica
                     </NuxtLink>
                   </li>
@@ -120,7 +122,7 @@ onMounted(()=>{
     </div>
 
 
-  </div>
+  </section>
 </template>
 
 <style scoped>

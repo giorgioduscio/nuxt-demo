@@ -2,13 +2,17 @@
 import type { FormField } from '~/components/formField_schema';
 import type { CV } from '~/pages/cv/cv_schema';
 
-export function useEditCv() {
+export function useCvDetail() {
 
   // Recupera l'ID dalla route
   const router = useRouter()
   const route = useRoute()
   const id = route.params.id as string
-  const GDPR_TEXT = 'Autorizzo il trattamento dei miei dati personali presenti nel CV ai sensi del Decreto Legislativo 30 giugno 2003, n. 196 “Codice in materia di protezione dei dati personali” e dell’art. 13 del GDPR (Regolamento UE 2016/679).'
+  
+  // Gestione modalità preview tramite query parameter
+  const isPreview = computed(() => 'preview' in route.query)
+  
+  const GDPR_TEXT = 'Autorizzo il trattamento dei miei dati personali presenti nel CV ai sensi del Decreto Legislativo 30 giugno 2003, n. 196 "Codice in materia di protezione dei dati personali" e dell\'art. 13 del GDPR (Regolamento UE 2016/679).'
 
   // Fetch del CV esistente se siamo in modalità edit
   let cv = reactive<CV>({
@@ -327,5 +331,5 @@ export function useEditCv() {
     }
   })
 
-  return { cv, form, list, router, GDPR_TEXT }
+  return { cv, form, list, router, isPreview, GDPR_TEXT }
 }
