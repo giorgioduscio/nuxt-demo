@@ -13,6 +13,7 @@ const props = defineProps<{
   errorMessage?: string
   message?: string
   options?: { label: string; value: string | number }[]
+  rows?: number
 }>()
 
 const emit = defineEmits(['update:modelValue'])
@@ -100,6 +101,7 @@ watchEffect(() => {
         :id="fieldKey"
         :name="fieldKey"
         :value="value"
+        :rows="rows"
         @input="updateValue(($event.target as HTMLTextAreaElement).value)"
         :placeholder="resolvedPlaceholder"
         :class="['form-control', input_class, { 'is-invalid': isInvalid }]"

@@ -4,8 +4,6 @@
 
 * [1] Scrivere test frontend con playwright (form) (2-3 ore)
   - DoD: Test passano su Chrome/Firefox, copertura >80%.
-* [2] Esportazione PDF e stampa del modello (2 ore)
-  - DoD: PDF generato correttamente, senza errori.
 + [2] Imposta il layout in base alle immagini 
   - DOD: wrappa le opt della select in base ai file immagine, un nuovo cv ha type="minimale" di default
 
@@ -38,3 +36,4 @@
 * Implementare README e home page
 * Implementare modello CV "Minimalista"
 * Implementare salvataggio realtime con debouncing
+* Esportazione PDF e stampa del modello

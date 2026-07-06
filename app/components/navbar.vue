@@ -18,8 +18,8 @@ const closeOffcanvas =()=> {
 }
 </script>
 <template>
-  <div style="padding-top: 3.5rem;">
-    <nav class="p-0 navbar navbar-expand-sm fixed-top shadow bg-dark z-3" data-bs-theme="dark">
+  <nav style="padding-top: 3.5rem;">
+    <div class="p-0 navbar navbar-expand-sm fixed-top shadow bg-dark z-3" data-bs-theme="dark">
       <div class="p-2 container">
 
         <!-- BURGER BUTTON FOR OFFCANVAS (MOBILE ONLY) -->
@@ -78,6 +78,12 @@ const closeOffcanvas =()=> {
         </NuxtLink>
 
       </div>
-    </nav>
-  </div>
+    </div>
+  </nav>
 </template>
+
+<style scoped lang="sass">
+@media print
+  nav
+    display: none !important
+</style>
