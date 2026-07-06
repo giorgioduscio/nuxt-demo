@@ -2,12 +2,12 @@
 
 ## 📌 To Do
 
-* [1] Scrivere test frontend (form) (2-3 ore)
+* [1] Scrivere test frontend con playwright (form) (2-3 ore)
   - DoD: Test passano su Chrome/Firefox, copertura >80%.
-* [2] Implementare salvataggio realtime con debouncing
-  - DoD: Salvataggio automatico quando l'utente smette di digitare, nessun errore in console.
-* [2] Esportazione PDF del modello (2 ore)
+* [2] Esportazione PDF e stampa del modello (2 ore)
   - DoD: PDF generato correttamente, senza errori.
++ [2] Imposta il layout in base alle immagini 
+  - DOD: wrappa le opt della select in base ai file immagine, un nuovo cv ha type="minimale" di default
 
 * [3] Scrivere test backend (API) (2 ore)
   - DoD: Test per CRUD CV, validazione dati.
@@ -37,3 +37,4 @@
 * Implementare form CV
 * Implementare README e home page
 * Implementare modello CV "Minimalista"
+* Implementare salvataggio realtime con debouncing

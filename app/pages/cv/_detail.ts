@@ -2,6 +2,14 @@
 import type { FormField } from '~/components/formField_schema';
 import type { CV } from '~/pages/cv/cv_schema';
 
+function debounce<T extends (...args: any[]) => any>(callback: T, delay: number) {
+  let timer: ReturnType<typeof setTimeout> | null = null
+  return (...args: Parameters<T>) => {
+    if (timer) clearTimeout(timer)
+    timer = setTimeout(() => callback(...args), delay)
+  }
+}
+
 export function useCvDetail() {
 
   // Recupera l'ID dalla route
@@ -161,14 +169,12 @@ export function useCvDetail() {
     fields_obj: computed(()=>{
       let result:{[k:string]:FormField} ={};
       for (const field of form.fields) {
-        result[field.key] =field;
+        result[field.key] = field;
       }
       return result
     }),
     // Flag che indica se l'utente ha tentato almeno una volta il submit
     submitOnce: ref(false),
-    // flag che indica una modifica del form
-    isChanged: ref(false),
 
     // Computed property: verifica se il form è valido
     isValid: computed((): boolean => {
@@ -179,12 +185,10 @@ export function useCvDetail() {
     // Resetta il form allo stato iniziale
     reset() {
       form.submitOnce.value = false;
-      form.isChanged.value = false;
 
       for (const field of form.fields) {
         const k = field.key as keyof CV;
-        const void_value = Array.isArray(cv[k]) ? []
-                        : '';
+        const void_value = Array.isArray(cv[k]) ? [] : '';
         field.value = cv[k] || void_value;
       }
     },
@@ -198,127 +202,117 @@ export function useCvDetail() {
     },
 
     // Gestisce il cambio di valore di un campo del form
-    handle_change(e:Event) {
+    handle_change(e: Event) {
       const inputElement = e.target as HTMLInputElement;
       const { id, type, name, value, checked } = inputElement;
-      if(id.includes('>')) return list.update(id, value) // LISTE
+      if (id.includes('>')) {
+        list.update(id, value)
+        autosave()
+        return
+      }
 
       const target = form.fields.find((field) => field.key === name);
-      if(!target) return; // Ignora input senza name corrispondente (es. liste)
+      if (!target) return; // Ignora input senza name corrispondente
 
       // Converte il valore in base al tipo di input
       const newValue = type === 'checkbox' ? checked
-                    : type === 'number' ? Number(value)
-                    : /*default*/ value;
+                    : type === 'number'    ? Number(value)
+                    :                        value;
       target.value = newValue;
-      form.isChanged.value =true;
+      autosave()
     },
 
     // Gestisce il submit del form
-    loading: reactive({ message: '', color:'', icon:''}),
-    set_loading(message:string, color='primary', icon='save') {    
+    loading: reactive({ message: '', color: '', icon: '' }),
+    set_loading(message: string, color = 'primary', icon = 'save') {
       form.loading.message = message;
       form.loading.color = color;
       form.loading.icon = icon;
     },
-    async handle_submit(redirect =false) {
-      try {     
+    async handle_submit(redirect = false) {
+      try {
         // 1) Imposta il flag submitOnce per mostrare gli errori di validazione
         form.submitOnce.value = true;
-        
+
         // 2) Valida tutti i campi
         const isValid = form.fields.every((field) => form.validate_field(field));
-        if(!isValid){
+        if (!isValid) {
           form.set_loading('Form non valido', 'warning', 'exclamation-triangle-fill');
-          setTimeout(()=> form.set_loading(''), 1000);
+          setTimeout(() => form.set_loading(''), 1000);
           return console.error("Form non valido");
         }
-        const editedForm = form.isChanged.value;
-        if (!editedForm) {
-          form.set_loading('Form non modificato', 'warning', 'exclamation-triangle-fill');
-          setTimeout(()=> form.set_loading(''), 1000);
-          return console.error("Form non modificato");
-        }
-        
+
         // 3) Costruisce il payload con i valori del form
         const payload = form.fields.reduce((acc, field) => {
           acc[field.key] = field.value
           return acc
         }, {} as Record<string, string | number | boolean>)
-    
-        // 4) Invia la richiesta API (PUT per edit, POST per creazione)
+
+        // 4) Invia la richiesta API
         form.set_loading('Salvataggio...', 'info', 'hourglass-split');
-        // PUT - Aggiorna CV esistente       
         await $fetch(`/api/cv/${id}`, {
           method: 'PUT',
           body: payload
         })
-    
+
         // 5) Redirect e feedback
-        if(redirect) router.push('/cv/list');
-        form.isChanged.value = false;
-        setTimeout(()=> form.set_loading(''), 1000);
-        
+        if (redirect) router.push('/cv/list');
+        form.set_loading('Salvato', 'success', 'check-circle-fill');
+        setTimeout(() => form.set_loading(''), 2000);
+
       } catch (e) { throw new Error('Errore durante il salvataggio', { cause: e }) }
     },
   };
 
-  const list ={
-    add(list_key: keyof CV, new_item: {[k:string]:string}) {   
-      // aggiorna il cv
-      const cv_list = (cv as any)?.[list_key];
-      if(!cv_list) throw new Error('Invalid list key');
-      cv_list.push(new_item);
+  // Salvataggio automatico: scatta 1s dopo l'ultima modifica
+  const autosave = debounce(async () => {
+    await form.handle_submit()
+  }, 1000)
 
+  const list = {
+    add(list_key: keyof CV, new_item: {[k: string]: string}) {
+      const cv_list = (cv as any)?.[list_key];
+      if (!cv_list) throw new Error('Invalid list key');
+      cv_list.push(new_item);
       cv = { ...cv } as CV;
 
-      // Sincronizza form.fields con cv
-      const field = form.fields.find(f=> f.key === list_key);
-      if(!field) throw new Error('Field not found');
+      const field = form.fields.find(f => f.key === list_key);
+      if (!field) throw new Error('Field not found');
       field.value = (cv as any)[list_key];
 
-      form.isChanged.value = true;
+      autosave()
     },
 
     remove(list_key: keyof CV, index: number) {
-      // aggiorna il cv
       const cv_list = (cv as any)?.[list_key];
-      if(!cv_list) throw new Error('Invalid list key');
-      
+      if (!cv_list) throw new Error('Invalid list key');
       cv_list.splice(index, 1);
       cv = { ...cv } as CV;
 
-      // Sincronizza form.fields con cv
-      const field = form.fields.find(f=> f.key === list_key);
-      if(!field) throw new Error('Field not found');
+      const field = form.fields.find(f => f.key === list_key);
+      if (!field) throw new Error('Field not found');
       field.value = (cv as any)[list_key];
-      
-      form.isChanged.value = true;
+
+      autosave()
     },
 
-    update(id:string, value:string) {
+    update(id: string, value: string) {
       const [list_name, index, key] = id.split('>');
-      if (!list_name || !index || !key) {
-        throw new Error('Invalid field id');
-      }
+      if (!list_name || !index || !key) throw new Error('Invalid field id');
 
       const cv_list = (cv as any)?.[list_name];
-      if(!cv_list) throw new Error('List not found');
-
+      if (!cv_list) throw new Error('List not found');
       cv_list[Number(index)][key] = value;
       cv = { ...cv } as CV;
 
-      // Sincronizza form.fields con cv
-      const field = form.fields.find(f=> f.key === list_name);
-      if(!field) throw new Error('Field not found');
-
+      const field = form.fields.find(f => f.key === list_name);
+      if (!field) throw new Error('Field not found');
       field.value = (cv as any)[list_name];
-      form.isChanged.value = true;
     }
   }
 
   // Al mount del componente, carica il CV e resetta il form
-  onMounted(async ()=>{
+  onMounted(async () => {
     document.title = 'Modifica CV';
     try {
       const data = await $fetch<CV>(`/api/cv/${id}`, { method: 'GET' });

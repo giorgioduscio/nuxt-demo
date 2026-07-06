@@ -31,13 +31,22 @@ const { cv, form, list, isPreview, GDPR_TEXT } = useCvDetail()
                    hidden_label="Tipo CV"
                    type="select"
                    :options="form.fields_obj.value.type?.options"/>
-            
-            <button :class="`ms-auto p-1 btn btn-sm btn-${form.loading.color || 'primary'} text-nowrap`" 
-                    :disabled="!!form.loading.message"
-                    @click="form.handle_submit()">
-              <i :class="`bi bi-${form.loading.icon || 'save'}`"></i> 
-              <span class="ms-1 d-none d-md-inline">{{ form.loading.message || 'Salva' }}</span> 
-            </button>
+
+            <!-- Indicatore salvataggio automatico -->
+            <span class="ms-auto d-flex align-items-center gap-1 text-nowrap">
+              <template v-if="form.loading.message === 'Salvataggio...'">
+                <i class="bi bi-hourglass-split text-info autosave-pulse"></i>
+                <span class="d-none d-md-inline text-info small">Salvataggio...</span>
+              </template>
+              <template v-else-if="form.loading.color === 'success'">
+                <i class="bi bi-check-circle-fill text-success"></i>
+                <span class="d-none d-md-inline text-success small">Salvato</span>
+              </template>
+              <template v-else-if="form.loading.color === 'warning'">
+                <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                <span class="d-none d-md-inline text-warning small">{{ form.loading.message }}</span>
+              </template>
+            </span>
                           
             <NuxtLink :to="`/cv/${$route.params.id}?preview`" 
                       class="p-1 btn btn-sm btn-outline-success text-nowrap">
@@ -339,4 +348,13 @@ const { cv, form, list, isPreview, GDPR_TEXT } = useCvDetail()
 .form-control
   border-bottom: 1px solid !important
   border-radius: 0
+
+.autosave-pulse
+  animation: pulse-opacity 1s ease-in-out infinite
+
+@keyframes pulse-opacity
+  0%, 100%
+    opacity: 1
+  50%
+    opacity: 0.2
 </style>
