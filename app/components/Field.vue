@@ -1,118 +1,130 @@
 <script setup lang="ts">
-import type { FormField } from './formField_schema';
-
-
 const props = defineProps<{
-  // Props per il campo generico
-  field: FormField;
-}>();
+  fieldKey: string
+  value?: any
+  label?: string
+  hidden_label?: string
+  placeholder?: string
+  type?: string
+  input_class?: string
+  inline?: boolean
+  asterisk?: boolean
+  validation?: (val: any) => boolean
+  errorMessage?: string
+  message?: string
+  options?: { label: string; value: string | number }[]
+}>()
 
-// Emetti eventi per v-model
-const emit = defineEmits(['update:modelValue']);
+const emit = defineEmits(['update:modelValue'])
+const updateValue = (newValue: any) => emit('update:modelValue', newValue)
 
-// Metodo per aggiornare il valore (usato in @input, @change, ecc.)
-const updateValue = (newValue: any) => {
-  emit('update:modelValue', newValue);
-};
+const resolvedPlaceholder = computed(() => props.placeholder ?? props.label ?? props.hidden_label ?? '')
+const resolvedType        = computed(() => props.type ?? 'text')
+const isInvalid           = computed(() => !!props.validation && !props.validation(props.value))
+
+// label e hidden_label sono mutualmente esclusivi: uno solo deve essere truthy
+watchEffect(() => {
+  const hasLabel       = !!props.label
+  const hasHiddenLabel = !!props.hidden_label
+  if (hasLabel === hasHiddenLabel) {
+    console.error(
+      `[Field fieldKey="${props.fieldKey}"] Passa label (visibile) OPPURE hidden_label (visually-hidden), non entrambi né nessuno.`
+    )
+  }
+})
 </script>
 
 <template>
-  <div v-if="field" class="field-container" :title="field.label">
-    <!-- Label con asterisco se obbligatorio -->
-    <label :for="field.key">
-      {{ field.label }}
-      <span v-if="field.asterisk" class="text-danger">*</span>
-    </label>
+  <div :class="[{ 'row align-items-center': inline }]" :title="label || hidden_label">
 
-    <!-- Campo in base al tipo -->
-    <template v-if="field.type === 'select' && field.options">
-      <!-- Select -->
-      <select
-        :id="field.key"
-        :name="field.key"
-        :value="field.value"
-        @input="updateValue(($event.target as HTMLSelectElement).value)"
-        class="form-control form-control-sm"
-        :class="{ 'is-invalid': field.validation && !field.validation(field.value) }"
-      >
-        <option v-for="option in field.options" :key="option.value" :value="option.value">
-          {{ option.label }}
-        </option>
-      </select>
-    </template>
-
-    <template v-else-if="field.type === 'radio' && field.options">
-      <!-- Radio buttons -->
-      <div class="radio-group">
-        <label v-for="option in field.options" :key="option.value" class="radio-option">
-          <input
-            :id="`${field.key}-${option.value}`"
-            :name="field.key"
-            type="radio"
-            :value="option.value"
-            :checked="field.value === option.value"
-            @change="updateValue(option.value)"
-            class="form-radio"
-            :class="{ 'is-invalid': field.validation && !field.validation(field.value) }"
-          >
-          <span>{{ option.label }}</span>
-        </label>
-      </div>
-    </template>
-
-    <template v-else-if="field.type === 'checkbox'">
-      <!-- Checkbox -->
-      <input
-        :id="field.key"
-        :name="field.key"
-        type="checkbox"
-        :checked="field.value"
-        @change="updateValue(($event.target as HTMLInputElement).checked)"
-        class="form-check-input"
-      >
-    </template>
-
-    <template v-else-if="field.type === 'textarea'">
-      <!-- Textarea -->
-      <textarea
-        :id="field.key"
-        :name="field.key"
-        :value="field.value"
-        @input="updateValue(($event.target as HTMLTextAreaElement).value)"
-        :placeholder="field.placeholder"
-        class="form-control form-control-sm"
-        :class="{ 'is-invalid': field.validation && !field.validation(field.value) }"
-      ></textarea>
-    </template>
-
-    <template v-else>
-      <!-- Campo di testo (default) -->
-      <input
-        :id="field.key"
-        :name="field.key"
-        :type="field.type || 'text'"
-        :value="field.value"
-        @input="updateValue(($event.target as HTMLInputElement).value)"
-        :placeholder="field.placeholder"
-        class="form-control form-control-sm"
-        :class="{ 'is-invalid': field.validation && !field.validation(field.value) }"
-      >
-    </template>
-
-    <!-- Messaggi di errore/validazione -->
-    <div v-if="field.validation && !field.validation(field.value)" class="text-danger">
-      {{ field.errorMessage }}
+    <!-- LABEL visibile -->
+    <div v-if="label" :class="{ 'col-auto': inline }">
+      <label :for="fieldKey"
+             class="d-grid gap-2"
+             style="grid-template-columns: 1fr auto;">
+        <span class="text-truncate">{{ label }}</span>
+        <span v-if="asterisk" class="text-danger">*</span>
+      </label>
     </div>
 
-    <!-- Messaggio informativo (es. hint) -->
-    <div v-if="field.message" class="field-message">
-      {{ field.message }}
+    <!-- LABEL nascosta (accessibilità) -->
+    <label v-if="hidden_label" :for="fieldKey" class="visually-hidden">
+      {{ hidden_label }}
+    </label>
+
+    <div :class="{ 'col': inline }">
+      <!-- SELECT -->
+      <select
+        v-if="resolvedType === 'select' && options"
+        :id="fieldKey"
+        :name="fieldKey"
+        :value="value"
+        @input="updateValue(($event.target as HTMLSelectElement).value)"
+        :class="['form-select', input_class, { 'is-invalid': isInvalid }]">
+        <option value="" disabled>{{ label || hidden_label }}</option>
+        <option v-for="opt in options" :key="opt.value" :value="opt.value">
+          {{ opt.label }}
+        </option>
+      </select>
+
+      <!-- RADIO -->
+      <div v-else-if="resolvedType === 'radio' && options" class="radio-group">
+        <label v-for="opt in options" :key="opt.value" class="radio-option">
+          <input
+            :id="`${fieldKey}-${opt.value}`"
+            :name="fieldKey"
+            type="radio"
+            :value="opt.value"
+            :checked="value === opt.value"
+            @change="updateValue(opt.value)"
+            class="form-radio"
+            :class="{ 'is-invalid': isInvalid }"
+          >
+          <span>{{ opt.label }}</span>
+        </label>
+      </div>
+
+      <!-- CHECKBOX -->
+      <input
+        v-else-if="resolvedType === 'checkbox'"
+        :id="fieldKey"
+        :name="fieldKey"
+        type="checkbox"
+        :checked="value"
+        @change="updateValue(($event.target as HTMLInputElement).checked)"
+        class="form-check-input">
+
+      <!-- TEXTAREA -->
+      <textarea
+        v-else-if="resolvedType === 'textarea'"
+        :id="fieldKey"
+        :name="fieldKey"
+        :value="value"
+        @input="updateValue(($event.target as HTMLTextAreaElement).value)"
+        :placeholder="resolvedPlaceholder"
+        :class="['form-control', input_class, { 'is-invalid': isInvalid }]"
+      ></textarea>
+
+      <!-- DEFAULT INPUT -->
+      <input
+        v-else
+        :id="fieldKey"
+        :name="fieldKey"
+        :type="resolvedType"
+        :value="value"
+        @input="updateValue(($event.target as HTMLInputElement).value)"
+        :placeholder="resolvedPlaceholder"
+        :class="['form-control', input_class, { 'is-invalid': isInvalid }]">
+    </div>
+
+    <!-- Errore validazione -->
+    <div v-if="isInvalid" :class="{ 'col-12': inline }">
+      <span class="text-danger">{{ errorMessage }}</span>
+    </div>
+
+    <!-- Hint -->
+    <div v-if="message" :class="{ 'col-12': inline }">
+      {{ message }}
     </div>
   </div>
 </template>
-
-<style scoped>
-.form-control{
-  resize: none;
-}
-</style>

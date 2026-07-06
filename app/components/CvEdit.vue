@@ -7,10 +7,33 @@ import Field from './Field.vue';
 const router = useRouter()
 const id = useRoute().params.id as string | undefined
 const isEdit = !!id
+const GDPR_TEXT = 'Autorizzo il trattamento dei miei dati personali presenti nel CV ai sensi del Decreto Legislativo 30 giugno 2003, n. 196 “Codice in materia di protezione dei dati personali” e dell’art. 13 del GDPR (Regolamento UE 2016/679).'
 
 // Fetch del CV esistente se siamo in modalità edit
-const { data: cv } = await useFetch<CV>(`/api/cv/${id || ''}`, {
-  method: 'GET'
+let cv = reactive<CV>({
+  id: 0,
+  type: '',
+  title: '',
+  subtitle: '',
+  description: '',
+  image: '',
+  birth_date: '',
+  email: '',
+  phone: '',
+  address: '',
+  contacts: [],
+  soft_skills: [],
+  hobby: [],
+  hard_skills: [],
+  lenguages: [],
+  experiences: []
+});
+
+useFetch<CV>(`/api/cv/${id || ''}`, {
+  method: 'GET',
+  onResponse: ({ response }) => {
+    if(response._data) cv = response._data;
+  }
 })
   
 // Oggetto form che gestisce lo stato e la logica del form
@@ -23,7 +46,7 @@ const form = {
       type: 'text',
       key: 'title',
       label: 'Titolo',
-      value: cv.value?.title || '',
+      value: cv.title || '',
       placeholder: 'Es: Ingegnere del software',
       asterisk: true,
       validation: (val: string) => val.length >= 3,
@@ -33,28 +56,28 @@ const form = {
       type: 'text',
       key: 'subtitle',
       label: 'Sottotitolo',
-      value: cv.value?.subtitle || '',
+      value: cv.subtitle || '',
       placeholder: 'Es: Sviluppatore full-stack'
     },
     {
       type: 'textarea',
       key: 'description',
       label: 'Descrizione',
-      value: cv.value?.description || '',
+      value: cv.description || '',
       placeholder: 'Es: Sviluppatore con 5 anni di esperienza in Vue.js e Nuxt'
     },
     {
       type: 'text',
       key: 'image',
       label: 'Immagine',
-      value: cv.value?.image || '',
+      value: cv.image || '',
       placeholder: 'Es: https://esempio.com/immagine.jpg'
     },
     {
       type: 'date',
       key: 'birth_date',
       label: 'Data di nascita',
-      value: cv.value?.birth_date || '',
+      value: cv.birth_date || '',
       placeholder: 'Es: 1990-01-01'
     },
     {
@@ -63,7 +86,7 @@ const form = {
       type: 'email',
       key: 'email',
       label: 'Email',
-      value: cv.value?.email || '',
+      value: cv.email || '',
       placeholder: 'Es: mario.rossi@example.com',
       asterisk: true,
       validation: (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val),
@@ -73,21 +96,21 @@ const form = {
       type: 'text',
       key: 'phone',
       label: 'Telefono',
-      value: cv.value?.phone || '',
+      value: cv.phone || '',
       placeholder: 'Es: +39 333 1234567'
     },
     {
       type: 'text',
       key: 'address',
       label: 'Indirizzo',
-      value: cv.value?.address || '',
+      value: cv.address || '',
       placeholder: 'Es: Via Roma 10, Milano, 20121'
     },
     {
       type: '',
       key: 'contacts',
       label: 'Contatti',
-      value: cv.value?.contacts || [],
+      value: cv.contacts || [],
     },
     {
       section: 'Competenze',
@@ -95,25 +118,25 @@ const form = {
       type: '',
       key: 'hard_skills',
       label: 'Hard Skills',
-      value: cv.value?.hard_skills || [],
+      value: cv.hard_skills || [],
     },
     {
       type: '',
       key: 'soft_skills',
       label: 'Soft Skills',
-      value: cv.value?.soft_skills || [],
+      value: cv.soft_skills || [],
     },
     {
       type: '',
       key: 'lenguages',
       label: 'Lingue',
-      value: cv.value?.lenguages || [],
+      value: cv.lenguages || [],
     },
     {
       type: '',
       key: 'hobby',
       label: 'Hobby',
-      value: cv.value?.hobby || [],
+      value: cv.hobby || [],
     },
     {
       section: 'Esperienze',
@@ -121,7 +144,7 @@ const form = {
       type: '',
       key: 'experiences',
       label: 'Esperienze',
-      value: cv.value?.experiences || [],
+      value: cv.experiences || [],
     },
   ]),
   fields_obj: computed(()=>{
@@ -149,9 +172,9 @@ const form = {
 
     for (const field of form.fields) {
       const k = field.key as keyof CV;
-      const void_value = Array.isArray(cv.value?.[k]) ? []
+      const void_value = Array.isArray(cv[k]) ? []
                        : '';
-      field.value = cv.value?.[k] || void_value;
+      field.value = cv[k] || void_value;
     }
   },
 
@@ -200,7 +223,7 @@ const form = {
         return console.error("Form non valido");
       }
       const editedForm = isEdit && form.isChanged.value;
-      if (!editedForm) {
+      if (id && !editedForm) {
         form.set_loading('Form non modificato', 'warning', 'exclamation-triangle-fill');
         setTimeout(()=> form.set_loading(''), 1000);
         return console.error("Form non modificato");
@@ -239,29 +262,37 @@ const form = {
 
 const list ={
   add(list_key: keyof CV, new_item: {[k:string]:string}) {
-    const cv_list = (cv.value as any)?.[list_key];
+    console.log(list_key, cv);
+    
+    // aggiorna il cv
+    const cv_list = (cv as any)?.[list_key];
     if(!cv_list) throw new Error('Invalid list key');
     cv_list.push(new_item);
 
-    cv.value = { ...cv.value } as CV;
+    cv = { ...cv } as CV;
 
-    // Sincronizza form.fields con cv.value
+    // Sincronizza form.fields con cv
     const field = form.fields.find(f=> f.key === list_key);
     if(!field) throw new Error('Field not found');
-    field.value = (cv.value as any)[list_key];
+    field.value = (cv as any)[list_key];
+
+    form.isChanged.value = true;
   },
 
   remove(list_key: keyof CV, index: number) {
-    const cv_list = (cv.value as any)?.[list_key];
+    // aggiorna il cv
+    const cv_list = (cv as any)?.[list_key];
     if(!cv_list) throw new Error('Invalid list key');
     
     cv_list.splice(index, 1);
-    cv.value = { ...cv.value } as CV;
+    cv = { ...cv } as CV;
 
-    // Sincronizza form.fields con cv.value
+    // Sincronizza form.fields con cv
     const field = form.fields.find(f=> f.key === list_key);
     if(!field) throw new Error('Field not found');
-    field.value = (cv.value as any)[list_key];
+    field.value = (cv as any)[list_key];
+    
+    form.isChanged.value = true;
   },
 
   update(id:string, value:string) {
@@ -270,240 +301,350 @@ const list ={
       throw new Error('Invalid field id');
     }
 
-    const cv_list = (cv.value as any)?.[list_name];
+    const cv_list = (cv as any)?.[list_name];
     if(!cv_list) throw new Error('List not found');
 
     cv_list[Number(index)][key] = value;
-    cv.value = { ...cv.value } as CV;
+    cv = { ...cv } as CV;
 
-    // Sincronizza form.fields con cv.value
+    // Sincronizza form.fields con cv
     const field = form.fields.find(f=> f.key === list_name);
     if(!field) throw new Error('Field not found');
 
-    field.value = (cv.value as any)[list_name];
-    form.isChanged.value =true;
+    field.value = (cv as any)[list_name];
+    form.isChanged.value = true;
   }
 }
 
 // Al mount del componente, imposta il titolo della pagina e resetta il form
 onMounted(()=>{
   document.title = isEdit ? 'Modifica CV' : 'Nuovo CV';
-  form.reset();
+  form.reset();  
 })
 </script>
 
 <template>
-  <section class="py-sm-3 container text-bg-dark" 
-            style="max-width: 20cm;"
-            @input="form.handle_change">
-
-    <!-- TOOLS -->
-    <div class="py-4 position-relative">
-      <div class="position-fixed" style="top: 4rem;">
-        <button :class="`btn btn-sm btn-${form.loading.color || 'primary'}`" 
-                @click="form.handle_submit()">
-          <span v-if="form.loading.message">
-            <i :class="`bi bi-${form.loading.icon}`"></i>
-            {{ form.loading.message }}
-          </span>
-          <span v-else> 
-            <i class="bi bi-save"></i> Salva
-          </span>
-        </button>
-      </div>
-    </div>
-
-    <!-- HEADER -->
-    <div class="row">
-      <div class="col-12 col-md-auto">
-        <img v-if="cv?.image" :src="cv?.image" 
-              alt="Imagine profilo"
-              class="mx-2 border rounded"
-              style="width: 5cm; height: 5cm; object-fit: cover;">
-        <div v-else class="border rounded" style="width: 5cm; height: 5cm;"></div>
-
-        <Field :field="form.fields_obj.value.image as FormField"/>
-        
-      </div>
-      <div class="col-12 col-md">
-        <Field :field="form.fields_obj.value.title as FormField"/>
-        <Field :field="form.fields_obj.value.subtitle as FormField"/>
-        <Field :field="form.fields_obj.value.description as FormField"/>
-      </div>
-    </div>
-    
-    <!-- BODY -->
-    <div class="row">
-      <div class="col-12 col-md-6">
-
-        <!-- CONTATTI -->
-        <div class="py-3">
-          <h4> <i class="bi bi-person"></i> Contatti</h4>
-          <Field :field="form.fields_obj.value.birth_date as FormField"/>
-          <Field :field="form.fields_obj.value.email as FormField"/>
-          <Field :field="form.fields_obj.value.address as FormField"/>
-          <Field :field="form.fields_obj.value.phone as FormField"/>
-        </div>
-
-        <button class="btn btn-sm btn-outline-info text-truncate" 
-                @click="list.add('contacts', {title: '', description: ''})"> 
-          <i class="bi bi-plus-lg"></i> Aggiungi contatto
-        </button>
-        <div v-for="(contact, index) in cv?.contacts" class="py-2 d-grid gap-2 align-items-start" 
-            style="grid-template-columns: auto 1fr 2fr;">
-          <button @click="list.remove('contacts', index)" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
-          <div>
-            <label :for="`contacts>${index}>title`" class="visually-hidden">Titolo contatto {{ index + 1 }}</label>
-            <input :id="`contacts>${index}>title`" :name="`contacts[${index}].title`" :value="contact.title" title="Titolo" class="form-control form-control-sm" type="text">
-          </div>
-          <div>
-            <label :for="`contacts>${index}>description`" class="visually-hidden">Descrizione contatto {{ index + 1 }}</label>
-            <textarea :id="`contacts>${index}>description`" :name="`contacts[${index}].description`" :value="contact.description" title="Descrizione" class="form-control form-control-sm" type="text"></textarea>
-          </div>
-        </div>
-        
-
-        <!-- HARD SKILLS -->
-        <h4 class="mt-4 d-flex justify-content-between align-items-center"> 
-          <div class="text-truncate">
-            <i class="bi bi-code"></i> 
-            Hard skills
-          </div>
-          <button @click="list.add('hard_skills', {title: '', level: '', description: ''})" 
-                  class="btn btn-sm btn-outline-info text-truncate"> 
-            <i class="bi bi-plus-lg"></i> Aggiungi
-          </button>
-        </h4>
-        <div v-for="(hs, index) in cv?.hard_skills" class="d-grid gap-2 align-items-start" 
-              style="grid-template-columns: auto 1fr 1fr 2fr;">
-          <button @click="list.remove('hard_skills', index)" 
-                  class="btn btn-sm btn-danger">
-            <i class="bi bi-trash"></i>
-          </button>
-          <div>
-            <label :for="`hard_skills>${index}>title`" class="visually-hidden">Titolo hard skill {{ index + 1 }}</label>
-            <input :id="`hard_skills>${index}>title`" :name="`hard_skills[${index}].title`" :value="hs.title" title="Titolo" class="form-control form-control-sm" type="text">
-          </div>
-          <div>
-            <label :for="`hard_skills>${index}>level`" class="visually-hidden">Livello hard skill {{ index + 1 }}</label>
-            <input :id="`hard_skills>${index}>level`" :name="`hard_skills[${index}].level`" :value="hs.level" title="Livello" class="form-control form-control-sm" type="text">
-          </div>
-          <div>
-            <label :for="`hard_skills>${index}>description`" class="visually-hidden">Descrizione hard skill {{ index + 1 }}</label>
-            <textarea :id="`hard_skills>${index}>description`" :name="`hard_skills[${index}].description`" :value="hs.description" title="Descrizione" class="form-control form-control-sm" type="text"></textarea>
-          </div>
-        </div>
-      
-
-        <!-- SOFT SKILLS -->
-        <h4 class="mt-4 d-flex justify-content-between align-items-center"> 
-          <div class="text-truncate">
-            <i class="bi bi-heart"></i> 
-            Soft skills
-          </div>
-          <button @click="list.add('soft_skills', {title: '', description: ''})" 
-                  class="btn btn-sm btn-outline-info text-truncate"> 
-            <i class="bi bi-plus-lg"></i> Aggiungi
-          </button>
-        </h4>
-        <div v-for="(ss, index) in cv?.soft_skills" class="d-grid gap-2 align-items-start" 
-              style="grid-template-columns: auto 1fr 2fr;">
-          <button @click="list.remove('soft_skills', index)" 
-                  class="btn btn-sm btn-danger">
-            <i class="bi bi-trash"></i>
-          </button>
-          <div>
-            <label :for="`soft_skills>${index}>title`" class="visually-hidden">Titolo soft skill {{ index + 1 }}</label>
-            <input :id="`soft_skills>${index}>title`" :name="`soft_skills[${index}].title`" :value="ss.title" title="Titolo" class="form-control form-control-sm" type="text">
-          </div>
-          <div>
-            <label :for="`soft_skills>${index}>description`" class="visually-hidden">Descrizione soft skill {{ index + 1 }}</label>
-            <textarea :id="`soft_skills>${index}>description`" :name="`soft_skills[${index}].description`" :value="ss.description" title="Descrizione" class="form-control form-control-sm" type="text"></textarea>
-          </div>
-        </div>
-        
-
-        <!-- LINGUAGGI -->
-        <h4 class="mt-4 d-flex justify-content-between align-items-center"> 
-          <div class="text-truncate">
-            <i class="bi bi-translate"></i> 
-            Linguaggi
-          </div>
-          <button @click="list.add('lenguages', {title: '', level: '', description: ''})" 
-                  class="btn btn-sm btn-outline-info text-truncate"> 
-            <i class="bi bi-plus-lg"></i> Aggiungi
-          </button>
-        </h4>
-        <div v-for="(lenguage, index) in cv?.lenguages" class="d-grid gap-2 align-items-start" 
-              style="grid-template-columns: auto 1fr 1fr 2fr;">
-          <button @click="list.remove('lenguages', index)" 
-                  class="btn btn-sm btn-danger">
-            <i class="bi bi-trash"></i>
-          </button>
-          <div>
-            <label :for="`lenguages>${index}>title`" class="visually-hidden">Titolo lingua {{ index + 1 }}</label>
-            <input :id="`lenguages>${index}>title`" :name="`lenguages[${index}].title`" :value="lenguage.title" title="Titolo" class="form-control form-control-sm" type="text">
-          </div>
-          <div>
-            <label :for="`lenguages>${index}>level`" class="visually-hidden">Livello lingua {{ index + 1 }}</label>
-            <input :id="`lenguages>${index}>level`" :name="`lenguages[${index}].level`" :value="lenguage.level" title="Livello" class="form-control form-control-sm" type="text">
-          </div>
-          <div>
-            <label :for="`lenguages>${index}>description`" class="visually-hidden">Descrizione lingua {{ index + 1 }}</label>
-            <textarea :id="`lenguages>${index}>description`" :name="`lenguages[${index}].description`" :value="lenguage.description" title="Descrizione" class="form-control form-control-sm" type="text"></textarea>
-          </div>
-        </div>
-      </div>
-      
-
-      <!-- ESPERIENZE -->
-      <div class="col-12 col-md-6">
-        <h4 class="mt-4 d-flex justify-content-between align-items-center">
-          <div class="text-truncate">
-            <i class="bi bi-briefcase"></i> 
-            Esperienze
-          </div>
-          <button @click="list.add('experiences', {start_date: '', role: '', period: '', company: '', description: ''})" 
-                  class="btn btn-sm btn-outline-info text-truncate"> 
-            <i class="bi bi-plus-lg"></i> Aggiungi
-          </button>
-        </h4>
-        
-        <div>
-          <div v-for="(exp, index) in cv?.experiences" class="py-2 d-flex gap-2 align-items-start">
-            <button @click="list.remove('experiences', index)" 
-                    class="btn btn-sm btn-danger">
-              <i class="bi bi-trash"></i>
+  <section class="pb-md-5">
+    <div class="p-sm-5 container text-bg-light shadow" 
+              style="max-width: 20cm;"
+              @input="form.handle_change">
+  
+      <!-- TOOLS -->
+      <div class="py-4 position-relative">
+        <div class="position-fixed" style="top: 4rem;">
+          <div class="d-flex gap-2">
+            
+            <button @click="router.back" class="btn btn-sm btn-secondary">Indietro</button>
+            
+            <button :class="`btn btn-sm btn-${form.loading.color || 'primary'}`" 
+                    :disabled="!!form.loading.message"
+                    @click="form.handle_submit()">
+              <span v-if="form.loading.message">
+                <i :class="`bi bi-${form.loading.icon}`"></i>
+                {{ form.loading.message }}
+              </span>
+              <span v-else> <i class="bi bi-save"></i> Salva </span>
             </button>
-
-            <div>
-              <div class="pb-2 d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
-                <div>
-                  <label :for="`experiences>${index}>start_date`" class="visually-hidden">Data inizio esperienza {{ index + 1 }}</label>
-                  <input :id="`experiences>${index}>start_date`" :name="`experiences[${index}].start_date`" :value="exp.start_date" title="Data inizio" class="form-control form-control-sm" type="text">
-                </div>
-                <div>
-                  <label :for="`experiences>${index}>role`" class="visually-hidden">Ruolo esperienza {{ index + 1 }}</label>
-                  <input :id="`experiences>${index}>role`" :name="`experiences[${index}].role`" :value="exp.role" title="Ruolo" class="form-control form-control-sm" type="text">
-                </div>
-                <div>
-                  <label :for="`experiences>${index}>period`" class="visually-hidden">Periodo esperienza {{ index + 1 }}</label>
-                  <input :id="`experiences>${index}>period`" :name="`experiences[${index}].period`" :value="exp.period" title="Periodo" class="form-control form-control-sm" type="text">
-                </div>
-                <div>
-                  <label :for="`experiences>${index}>company`" class="visually-hidden">Azienda esperienza {{ index + 1 }}</label>
-                  <input :id="`experiences>${index}>company`" :name="`experiences[${index}].company`" :value="exp.company" title="Azienda" class="form-control form-control-sm" type="text">
-                </div>
+            
+          </div>
+        </div>
+      </div>
+  
+      <!-- HEADER -->
+      <div class="row">
+        <div class="col-12 col-md-auto">
+          <img v-if="cv?.image" :src="cv?.image" 
+                alt="Imagine profilo"
+                class="mx-2 border rounded-circle shadow"
+                style="width: 6cm; height: 6cm; object-fit: cover;">
+  
+          <Field :field="form.fields_obj.value.image as FormField"
+                  input_class="rounded-0 border-0 border-dark border-bottom"/>
+        </div>
+          
+        <div class="col-12 col-md">
+          <Field :field="form.fields_obj.value.title as FormField"
+                  input_class="fs-2 rounded-0 border-0 border-dark border-bottom"/>
+          <Field :field="form.fields_obj.value.subtitle as FormField"
+                  input_class="fs-5 rounded-0 border-0 border-dark border-bottom"/>
+          <Field :field="form.fields_obj.value.description as FormField"
+                  input_class="rounded-0 border-0 border-dark border-bottom"/>
+        </div>
+      </div>
+      
+      <!-- BODY -->
+      <div class="row">
+        <div class="col-12 col-md-6">
+          
+          <div class="pt-4"> <!-- HARD SKILLS -->
+            <div class="d-flex justify-content-between align-items-center"> 
+              <h4 class="text-truncate">
+                <i class="bi bi-code"></i> 
+                Hard skills
+              </h4>
+              <button @click="list.add('hard_skills', {title: '', level: '', description: ''})" 
+                      class="btn btn-sm btn-outline-primary text-truncate"> 
+                <i class="bi bi-plus-lg"></i> Aggiungi
+              </button>
+            </div>
+            <div v-for="(hs, index) in cv?.hard_skills" class="d-grid gap-1 align-items-start" 
+                  style="grid-template-columns: auto 1fr 1fr 2fr;">
+              <button @click="list.remove('hard_skills', index)" 
+                      class="p-1 btn btn-sm btn-danger">
+                <i class="bi bi-trash"></i>
+              </button>
+              <div>
+                <label :for="`hard_skills>${index}>title`" class="visually-hidden">Titolo hard skill {{ index + 1 }}</label>
+                <input :id="`hard_skills>${index}>title`" :name="`hard_skills[${index}].title`" :value="hs.title" title="Titolo" class="form-control form-control-sm" type="text">
               </div>
               <div>
-                <label :for="`experiences>${index}>description`" class="visually-hidden">Descrizione esperienza {{ index + 1 }}</label>
-                <textarea :id="`experiences>${index}>description`" :name="`experiences[${index}].description`" :value="exp.description" title="Descrizione" class="form-control form-control-sm" type="text"></textarea>
+                <label :for="`hard_skills>${index}>level`" class="visually-hidden">Livello hard skill {{ index + 1 }}</label>
+                <input :id="`hard_skills>${index}>level`" :name="`hard_skills[${index}].level`" :value="hs.level" title="Livello" class="form-control form-control-sm" type="text">
+              </div>
+              <div>
+                <label :for="`hard_skills>${index}>description`" class="visually-hidden">Descrizione hard skill {{ index + 1 }}</label>
+                <textarea :id="`hard_skills>${index}>description`" :name="`hard_skills[${index}].description`" :value="hs.description" title="Descrizione" class="form-control form-control-sm" type="text"></textarea>
+              </div>
+            </div>
+          </div>
+  
+          
+          <div class="pt-4"> <!-- CONTATTI -->
+            <h4> <i class="bi bi-person"></i> Contatti</h4>
+            <Field inline :field="form.fields_obj.value.birth_date as FormField"
+                  input_class="rounded-0 border-0 border-dark border-bottom"/>
+            <Field inline :field="form.fields_obj.value.email as FormField"
+                  input_class="rounded-0 border-0 border-dark border-bottom"/>
+            <Field inline :field="form.fields_obj.value.address as FormField"
+                  input_class="rounded-0 border-0 border-dark border-bottom"/>
+            <Field inline :field="form.fields_obj.value.phone as FormField"
+                  input_class="rounded-0 border-0 border-dark border-bottom"/>
+
+            <div v-for="(contact, index) in cv?.contacts" class="py-1 d-grid gap-1 align-items-start" 
+                style="grid-template-columns: auto 1fr 2fr;">
+
+              <button @click="list.remove('contacts', index)" 
+                      class="p-1 btn btn-sm btn-danger">
+                <i class="bi bi-trash"></i>
+              </button>
+              <div>
+                <label :for="`contacts>${index}>title`" 
+                        class="visually-hidden">
+                        Titolo contatto {{ index + 1 }}
+                </label>
+                <input :id="`contacts>${index}>title`" 
+                        :name="`contacts[${index}].title`" 
+                        :value="contact.title" 
+                        title="Titolo" 
+                        class="mb-1 form-control form-control-sm" 
+                        placeholder="Titolo"
+                        type="text">
+              </div>
+              <div>
+                <label :for="`contacts>${index}>description`" 
+                        class="visually-hidden">
+                        Descrizione contatto {{ index + 1 }}
+                </label>
+                <textarea :id="`contacts>${index}>description`" 
+                          :name="`contacts[${index}].description`" 
+                          :value="contact.description" 
+                          title="Descrizione" 
+                          class="form-control form-control-sm" 
+                          placeholder="Descrizione"
+                          type="text">
+                </textarea>
+              </div>
+            </div>
+            <button class="my-2 btn btn-sm btn-outline-primary text-truncate" 
+                    @click="list.add('contacts', {title: '', description: ''})"> 
+              <i class="bi bi-plus-lg"></i> Aggiungi contatto
+            </button>
+          </div>
+        
+  
+          <div class="pt-4"> <!-- SOFT SKILLS -->
+            <div class="d-flex justify-content-between align-items-center"> 
+              <h4 class="text-truncate">
+                <i class="bi bi-heart"></i> 
+                Soft skills
+              </h4>
+              <button @click="list.add('soft_skills', {title: '', description: ''})" 
+                      class="btn btn-sm btn-outline-primary text-truncate"> 
+                <i class="bi bi-plus-lg"></i> Aggiungi
+              </button>
+            </div>
+            <div v-for="(ss, index) in cv?.soft_skills" class="d-grid gap-2 align-items-start" 
+                  style="grid-template-columns: auto 1fr 2fr;">
+              <button @click="list.remove('soft_skills', index)" 
+                      class="p-1 btn btn-sm btn-danger">
+                <i class="bi bi-trash"></i>
+              </button>
+              <div>
+                <label :for="`soft_skills>${index}>title`" class="visually-hidden">Titolo soft skill {{ index + 1 }}</label>
+                <input :id="`soft_skills>${index}>title`" :name="`soft_skills[${index}].title`" :value="ss.title" title="Titolo" class="form-control form-control-sm" type="text">
+              </div>
+              <div>
+                <label :for="`soft_skills>${index}>description`" class="visually-hidden">Descrizione soft skill {{ index + 1 }}</label>
+                <textarea :id="`soft_skills>${index}>description`" :name="`soft_skills[${index}].description`" :value="ss.description" title="Descrizione" class="form-control form-control-sm" type="text"></textarea>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+        
+  
+        <div class="col-12 col-md-6"> 
+          <div class="pt-4"> <!-- LINGUAGGI -->
+            <div class="d-flex justify-content-between align-items-center"> 
+              <h4 class="text-truncate">
+                <i class="bi bi-translate"></i> 
+                Linguaggi
+              </h4>
+              <button @click="list.add('lenguages', {title: '', level: '', description: ''})" 
+                      class="btn btn-sm btn-outline-primary text-truncate"> 
+                <i class="bi bi-plus-lg"></i> Aggiungi
+              </button>
+            </div>
+
+            <div v-for="(lenguage, index) in cv?.lenguages" 
+                  class="d-grid gap-1 align-items-start" 
+                  style="grid-template-columns: auto 1fr 1fr 2fr;">
+              <button @click="list.remove('lenguages', index)" 
+                      class="p-1 btn btn-sm btn-danger">
+                <i class="bi bi-trash"></i>
+              </button>
+              <div>
+                <label :for="`lenguages>${index}>title`" 
+                        class="visually-hidden">Titolo lingua {{ index + 1 }}</label>
+                <input :id="`lenguages>${index}>title`" 
+                        :name="`lenguages[${index}].title`" 
+                        :value="lenguage.title" 
+                        title="Titolo" 
+                        placeholder="Titolo"
+                        class="form-control form-control-sm" 
+                        type="text">
+              </div>
+              <div>
+                <label :for="`lenguages>${index}>level`" 
+                        class="visually-hidden">Livello lingua {{ index + 1 }}</label>
+                <input :id="`lenguages>${index}>level`" 
+                        :name="`lenguages[${index}].level`" 
+                        :value="lenguage.level" 
+                        title="Livello" 
+                        placeholder="Livello"
+                        class="form-control form-control-sm" 
+                        type="text">
+              </div>
+              <div>
+                <label :for="`lenguages>${index}>description`" 
+                        class="visually-hidden">Descrizione lingua {{ index + 1 }}</label>
+                <textarea :id="`lenguages>${index}>description`" 
+                        :name="`lenguages[${index}].description`" 
+                        :value="lenguage.description" 
+                        title="Descrizione" 
+                        placeholder="Descrizione"
+                        class="form-control form-control-sm" 
+                        type="text"></textarea>
+              </div>
+            </div>
+          </div>
+          
+          <!-- ESPERIENZE -->
+          <div class="pt-4">
+            <div class="d-flex justify-content-between align-items-center">
+              <h4 class="text-truncate">
+                <i class="bi bi-briefcase"></i> 
+                Esperienze
+              </h4>
+              <button @click="list.add('experiences', {start_date: '', role: '', period: '', company: '', description: ''})" 
+                      class="btn btn-sm btn-outline-primary text-truncate"> 
+                <i class="bi bi-plus-lg"></i> Aggiungi
+              </button>
+            </div>
+            
+            <div v-for="(exp, index) in cv?.experiences" 
+                  class="py-2 d-flex gap-1 align-items-start">
+              <button @click="list.remove('experiences', index)" 
+                      class="p-1 btn btn-sm btn-danger">
+                <i class="bi bi-trash"></i>
+              </button>
+  
+              <div>
+                <div class="pb-2 row gap-1 g-0"> <!-- head -->
+                  <div class="col-auto" data-company>
+                    <label :for="`experiences>${index}>company`" 
+                          class="visually-hidden">
+                          Azienda esperienza {{ index + 1 }}
+                    </label>
+                    <input :id="`experiences>${index}>company`" 
+                            :name="`experiences[${index}].company`" 
+                            :value="exp.company" 
+                            title="Azienda" 
+                            placeholder="Azienda"
+                            class="form-control fs-6" 
+                            type="text">
+                  </div>
+                  <div class="col" data-period>
+                    <label :for="`experiences>${index}>period`" 
+                          class="visually-hidden">
+                          Periodo esperienza {{ index + 1 }}
+                    </label>
+                    <input :id="`experiences>${index}>period`" 
+                            :name="`experiences[${index}].period`" 
+                            :value="exp.period" 
+                            title="Periodo" 
+                            placeholder="Periodo"
+                            class="form-control form-control-sm" 
+                            type="text">
+                  </div>
+                  <div class="col-12" data-role>
+                    <label :for="`experiences>${index}>role`" 
+                          class="visually-hidden">
+                          Ruolo esperienza {{ index + 1 }}
+                    </label>
+                    <input :id="`experiences>${index}>role`" 
+                            :name="`experiences[${index}].role`" 
+                            :value="exp.role" 
+                            title="Ruolo" 
+                            placeholder="Ruolo"
+                            class="form-control form-control-sm" 
+                            type="text">
+                  </div>
+                </div>
+                
+                <div> <!-- body -->
+                  <label :for="`experiences>${index}>description`" 
+                        class="visually-hidden">
+                        Descrizione esperienza {{ index + 1 }}
+                  </label>
+                  <textarea :id="`experiences>${index}>description`" 
+                            :name="`experiences[${index}].description`" 
+                            :value="exp.description" 
+                            title="Descrizione" 
+                            placeholder="Descrizione"
+                            class="form-control form-control-sm" 
+                            type="text">
+                  </textarea>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
+      <!-- ALERT -->
+      <div class="my-3 alert alert-info d-grid gap-2" 
+          style="grid-template-columns: auto 1fr;">
+        <i class="bi bi-info-circle"></i>
+        <small>{{ GDPR_TEXT }}</small>
+      </div>
+  
+    </div>
   </section>
 </template>
+
+<style scoped lang="sass">
+.form-control
+  border-bottom: 1px solid !important
+  border-radius: 0
+</style>

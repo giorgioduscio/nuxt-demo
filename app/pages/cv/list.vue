@@ -1,19 +1,52 @@
-<script setup>
+<script setup lang="ts">
+import type { CV } from './cv_schema'
+
+
 definePageMeta({
   title: 'CV List',
   description: 'Lista dei CV',
   icon: 'file-text'
 })
 
-const { data: cvs } = await useFetch('/api/cv')
-const searchQuery = ref('')
+const { data: cvs } = await useFetch<CV[]>('/api/cv', {
+  default: () => []
+})
 
+// FILTRAGGIO
+const searchQuery = ref('')
 const filteredCvs = computed(() => {
   if (!searchQuery.value) return cvs.value
-  return cvs.value?.filter(cv => 
+  return cvs.value.filter(cv => 
     cv.title?.toLowerCase().includes(searchQuery.value.toLowerCase())
-  ) || []
+  )
 })
+
+async function addCv() {
+  const new_id = Math.floor(Math.random() * 1000000)
+  const new_cv: CV = {
+    id: new_id,
+    type: '',
+    title: 'document_' + new_id,
+    subtitle: '',
+    description: '',
+    image: '',
+    birth_date: '',
+    email: new_id + '@example.com',
+    phone: '',
+    address: '',
+    contacts: [],
+    soft_skills: [],
+    hobby: [],
+    hard_skills: [],
+    lenguages: [],
+    experiences: []
+  }
+  await $fetch<CV>('/api/cv', {
+    method: 'POST',
+    body: new_cv
+  })
+  await refreshNuxtData()
+}
 
 onMounted(()=>{
   document.title = 'CV List';
@@ -25,7 +58,8 @@ onMounted(()=>{
     <!-- HEADER -->
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h1>CV List</h1>
-      <NuxtLink class="btn btn-success" to="/cv/create">Aggiungi CV</NuxtLink>
+      <!-- <NuxtLink class="btn btn-success" to="/cv/create">Aggiungi CV</NuxtLink> -->
+      <button class="btn btn-primary" @click="()=>addCv()">Aggiungi CV</button>
     </div>
 
     <!-- SEARCH -->

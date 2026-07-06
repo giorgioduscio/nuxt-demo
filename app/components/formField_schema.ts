@@ -13,6 +13,8 @@ export interface FormField {
     label: string,
     value: string | number
   }[],
+
+  // SEZIONI
   section?: string,
   section_icon?: string,
 }
