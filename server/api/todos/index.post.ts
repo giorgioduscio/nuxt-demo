@@ -12,7 +12,6 @@ export default defineEventHandler(async (event) => {
     };
     
     await storage.setItem(`${customId}.json`, newTodo);
-    // console.log("POST todos", customId);
     return newTodo;
 
   } catch(e){ throw e }

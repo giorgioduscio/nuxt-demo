@@ -1,16 +1,28 @@
-import { CV } from "~/pages/cv/cv_schema";
+import { cvSchema, type CV } from "~/pages/cv/cv_schema";
+import { safeParse } from 'valibot';
 
 export default defineEventHandler(async(event)=>{
   try {
     //1) Recupera l'id e il corpo della richiesta
-    const body = await readBody<CV>(event);
+    const body = await readBody(event);
     const id = event.context.params?.id;
     if(!id) throw createError({
       statusCode: 400,
       statusMessage: "ID mancante nell'URL",
     });
 
-    //2) Recupera l'oggetto
+    //2) Valida i dati con valibot
+    const result = safeParse(cvSchema, body);
+    if (!result.success) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "Dati non validi",
+        cause: result.issues
+      });
+    }
+    const validatedData = result.output;
+
+    //3) Recupera l'oggetto
     const storage = useStorage('cv');
     const keys = await storage.getKeys();
     const key = keys.find(key=> key.includes(id));
@@ -25,15 +37,15 @@ export default defineEventHandler(async(event)=>{
       statusMessage: "CV non trovato"
     })
 
-    //3) Aggiorna i valori
-    const updatedCV :CV ={...cv_match, ...body};
+    //4) Aggiorna i valori
+    const updatedCV = {...cv_match, ...validatedData};
     await storage.setItem(key, updatedCV);
     return updatedCV;
     
   } catch (e) {
     throw createError({
       statusCode: 500, 
-      statusMessage: "Errore durante l'aggiornaamento del cv",
+      statusMessage: "Errore durante l'aggiornamento del cv",
       cause: e,
     });
     

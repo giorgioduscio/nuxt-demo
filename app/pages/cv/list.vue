@@ -41,7 +41,7 @@ async function addCv() {
     lenguages: [],
     experiences: []
   }
-  await $fetch<CV>('/api/cv', {
+  const result = await $fetch<CV>('/api/cv', {
     method: 'POST',
     body: new_cv
   })

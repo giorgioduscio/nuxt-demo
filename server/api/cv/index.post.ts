@@ -1,26 +1,27 @@
-import type { CV } from '../../../app/pages/cv/cv_schema'
+import { CV, cvSchema } from '~/pages/cv/cv_schema';
+import { safeParse } from 'valibot';
 
 export default defineEventHandler(async(event)=>{
   try{
     const body = await readBody(event);
+    
+    // Valida i dati con valibot
+    const result = safeParse(cvSchema, body);
+    if (!result.success) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "Dati non validi",
+        cause: result.issues
+      });
+    }
+    
     const storage = useStorage('cv');
+    
+    // Usa l'ID fornito dal client, se presente, altrimenti generane uno
     const customId = `${Date.now()}${Math.floor(Math.random() *1000)}`;
     const newCV: CV = {
+      ...result.output,
       id: Number(customId),
-      title: body.title,
-      subtitle: body.subtitle,
-      description: body.description,
-      image: body.image,
-      birth_date: body.birth_date,
-      email: body.email,
-      phone: body.phone,
-      address: body.address,
-      contacts: body.contacts,
-      hard_skills: body.hard_skills,
-      soft_skills: body.soft_skills,
-      lenguages: body.lenguages,
-      experiences: body.experiences,
-      hobby: body.hobby,
     };
     
     await storage.setItem(`${customId}.json`, newCV);

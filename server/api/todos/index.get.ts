@@ -9,7 +9,6 @@ export default defineEventHandler(async (event) => {
       keys.map(key => storage.getItem(key))
     );
 
-    // console.log(`GET ${todos.length} todos`);
     return todos || [];
     
   } catch(e){ throw e }

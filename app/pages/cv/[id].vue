@@ -68,10 +68,10 @@ const { cv, form, list, isPreview, GDPR_TEXT } = useCvDetail()
         <div v-if="cv?.image || !isPreview" class="col-12 col-sm-auto">
           <img v-if="cv?.image" :src="cv?.image" 
                 alt="Imagine profilo"
-                class="mx-2 border rounded-circle shadow"
+                class="mx-2 border rounded-circle"
                 style="width: 6cm; height: 6cm; object-fit: cover;">
           
-          <div v-else class="bg-secondary border rounded-circle shadow" 
+          <div v-else class="bg-secondary border rounded-circle" 
                 style="width: 6cm; height: 6cm"></div>
   
           <Field v-if="!isPreview" field-key="image"

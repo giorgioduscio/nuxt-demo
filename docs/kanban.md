@@ -4,7 +4,6 @@
 
 * [1] Scrivere test frontend con playwright (form) (2-3 ore)
   - DoD: Test passano su Chrome/Firefox, copertura >80%.
-* [3] Implementare valibot per la validazione dei dati
 
 * [3] Scrivere test backend (API) (2 ore)
   - DoD: Test per CRUD CV, validazione dati.
@@ -37,3 +36,4 @@
 * Implementare modello CV "Minimalista"
 * Implementare salvataggio realtime con debouncing
 * Esportazione PDF e stampa del modello
+* Implementare valibot per la validazione dei dati

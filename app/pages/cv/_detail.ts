@@ -1,6 +1,8 @@
 
 import type { FormField } from '~/components/formField_schema';
 import type { CV } from '~/pages/cv/cv_schema';
+import { cvSchema } from '~/pages/cv/cv_schema';
+import { parse, safeParse } from 'valibot';
 
 function debounce<T extends (...args: any[]) => any>(callback: T, delay: number) {
   let timer: ReturnType<typeof setTimeout> | null = null
@@ -248,14 +250,22 @@ export function useCvDetail() {
           return acc
         }, {} as Record<string, string | number | boolean>)
 
-        // 4) Invia la richiesta API
+        // 4) Valida i dati con valibot
+        const result = safeParse(cvSchema, payload);
+        if (!result.success) {
+          form.set_loading('Dati non validi', 'warning', 'exclamation-triangle-fill');
+          setTimeout(() => form.set_loading(''), 2000);
+          return console.error("Validazione valibot fallita:", result.issues);
+        }
+
+        // 5) Invia la richiesta API
         form.set_loading('Salvataggio...', 'info', 'hourglass-split');
         await $fetch(`/api/cv/${id}`, {
           method: 'PUT',
-          body: payload
+          body: result.output
         })
 
-        // 5) Redirect e feedback
+        // 6) Redirect e feedback
         if (redirect) router.push('/cv/list');
         form.set_loading('Salvato', 'success', 'check-circle-fill');
         setTimeout(() => form.set_loading(''), 2000);
@@ -314,7 +324,7 @@ export function useCvDetail() {
   // Al mount del componente, carica il CV e resetta il form
   onMounted(async () => {
     document.title = 'Modifica CV';
-    try {
+    try {      
       const data = await $fetch<CV>(`/api/cv/${id}`, { method: 'GET' });
       if (data) {
         Object.assign(cv, data);
