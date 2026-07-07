@@ -25,7 +25,7 @@ async function addCv() {
   const new_id = Math.floor(Math.random() * 1000000)
   const new_cv: CV = {
     id: new_id,
-    type: '',
+    type: 'minimale', //FIX
     title: 'document_' + new_id,
     subtitle: '',
     description: '',

@@ -1,3 +1,8 @@
+<script setup>
+onMounted(()=>{
+  document.title = 'CV Manager'
+})
+</script>
 <style lang="sass">
 .layout
     min-height: 100vh

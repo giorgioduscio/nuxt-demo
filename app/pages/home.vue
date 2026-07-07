@@ -50,7 +50,7 @@ const tools: Tool[] = [
   {
     title: "Vue 3",
     description: "Libreria reattiva per la creazione di interfacce utente dinamiche e interattive.",
-    icon: "bi-vue"
+    icon: "bi-code-slash"
   },
   {
     title: "Bootstrap 5",
@@ -65,12 +65,12 @@ const tools: Tool[] = [
   {
     title: "TypeScript",
     description: "Tipizzazione statica per codice robusto, manutenibile e privo di errori.",
-    icon: "bi-code-slash"
+    icon: "bi-braces-asterisk"
   },
   {
-    title: "html2pdf.js",
-    description: "Libreria per generare PDF lato client direttamente dal DOM.",
-    icon: "bi-file-pdf"
+    title: "Browser Print API",
+    description: "API nativa del browser per generare PDF tramite window.print().",
+    icon: "bi-printer"
   },
   {
     title: "Valibot",
@@ -80,7 +80,7 @@ const tools: Tool[] = [
   {
     title: "Docker",
     description: "Containerizzazione per ambienti di sviluppo e produzione isolati e riproducibili.",
-    icon: "bi-docker"
+    icon: "bi-boxes"
   }
 ];
 
