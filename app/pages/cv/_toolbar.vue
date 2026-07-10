@@ -1,14 +1,32 @@
 <script setup lang="ts">
-interface Props {
-  isPreview: boolean
-  form: any
-  cvId: string
-}
+const props = defineProps<{
+  isPreview: boolean,
+  form: any,
+  cvId: string,
+  cvType: string
+}>()
 
-const props = defineProps<Props>()
+const router = useRouter()
+const printCV =()=> window.print()
 
-const printCV = () => {
-  window.print()
+const cvTypes = [
+  { label: 'Minimale', value: 'minimale' },
+  { label: 'Classico', value: 'classico' },
+  { label: 'Moderno', value: 'moderno' },
+  { label: 'Creativo', value: 'creativo' },
+  { label: 'Accademico', value: 'accademico' },
+]
+
+async function changeCvType(newType: string) {
+  // Aggiorna il campo type nel form
+  const typeField = props.form.fields.find((f: any) => f.key === 'type')
+  if (typeField) {
+    typeField.value = newType
+    // Salva le modifiche
+    await props.form.handle_submit()
+  }
+  // Reindirizza alla nuova route
+  router.push(`/cv/${newType}/${props.cvId}`)
 }
 </script>
 
@@ -22,12 +40,14 @@ const printCV = () => {
       </NuxtLink>
 
       <template v-if="isPreview">
+        <!-- STAMPA -->
         <button @click="printCV()" 
                 class="p-1 btn btn-sm btn-outline-secondary me-2">
           <i class="bi bi-printer me-1"></i>
           <span class="d-none d-sm-inline">Stampa/PDF</span>
         </button>
-        <NuxtLink :to="`/cv/${cvId}`" 
+        <!-- MODIFICA -->
+        <NuxtLink :to="`/cv/${cvType}/${cvId}`" 
                   class="ms-auto p-1 btn btn-sm btn-primary">
           <i class="bi bi-pencil me-1"></i>
           <span class="d-none d-sm-inline">Modifica</span>
@@ -35,6 +55,24 @@ const printCV = () => {
       </template>
 
       <template v-else>
+        <!-- DROPDOWN TIPO CV -->
+        <div class="dropdown">
+          <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="bi bi-palette me-1"></i>
+            <span class="d-none d-sm-inline">Tipo: {{ cvTypes.find(t => t.value === cvType)?.label || cvType }}</span>
+          </button>
+          <ul class="dropdown-menu">
+            <li v-for="type in cvTypes" :key="type.value">
+              <a class="dropdown-item" 
+                 href="#" 
+                 @click.prevent="changeCvType(type.value)"
+                 :class="{ active: type.value === cvType }">
+                {{ type.label }}
+              </a>
+            </li>
+          </ul>
+        </div>
+
         <!-- Indicatore salvataggio automatico -->
         <span class="ms-auto d-flex align-items-center gap-1 text-nowrap">
           <template v-if="form.loading.message === 'Salvataggio...'">
@@ -50,8 +88,9 @@ const printCV = () => {
             <span class="d-none d-sm-inline text-warning small">{{ form.loading.message }}</span>
           </template>
         </span>
-                      
-        <NuxtLink :to="`/cv/${cvId}?preview`" 
+
+        <!-- PREVIEW -->
+        <NuxtLink :to="`/cv/${cvType}/${cvId}?preview`"
                   class="p-1 btn btn-sm btn-success text-nowrap">
           <i class="bi bi-eye me-1"></i>
           <span class="d-none d-sm-inline">Preview</span>

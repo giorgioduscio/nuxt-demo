@@ -7,6 +7,11 @@ onMounted(()=>{
 .layout
     min-height: 100vh
     background: linear-gradient(135deg, #333, #764ba2)
+    display: flex
+    flex-direction: column
+
+main
+    flex: 1
 
 </style>
 <template>
@@ -15,5 +20,6 @@ onMounted(()=>{
     <main>
       <NuxtPage />
     </main>
+    <Footer />
   </div>
 </template>

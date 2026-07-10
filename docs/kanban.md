@@ -7,8 +7,6 @@
 
 * [3] Scrivere test backend (API) (2 ore)
   - DoD: Test per CRUD CV, validazione dati.
-+ [2] Imposta il layout in base alle immagini 
-  - DOD: wrappa le opt della select in base ai file immagine, un nuovo cv ha type="minimale" di default
 * [5] Implementare modello CV "Classico" (2-3 ore)
   - DoD: Modello visualizzabile, responsive.
 * [5] Implementare modello CV "Moderno" (2-3 ore)
@@ -37,3 +35,4 @@
 * Implementare salvataggio realtime con debouncing
 * Esportazione PDF e stampa del modello
 * Implementare valibot per la validazione dei dati
+* Imposta il layout in base alle immagini 
