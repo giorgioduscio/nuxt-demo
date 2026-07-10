@@ -31,7 +31,8 @@ async function changeCvType(newType: string) {
 </script>
 
 <template>
-  <div data-toolbar class="sticky-top py-2 text-bg-light shadow-sm" style="top: 3.5rem">
+  <div data-toolbar class="sticky-top py-2 text-bg-light shadow-sm" style="top: 3.5rem"
+          :class="{'border-success border-bottom border-3': !isPreview}">
     <div class="px-2 d-flex gap-1 align-items-center">
         
       <NuxtLink :to="'/cv/list'" class="p-1 btn btn-sm btn-outline-dark">

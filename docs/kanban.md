@@ -36,3 +36,4 @@
 * Esportazione PDF e stampa del modello
 * Implementare valibot per la validazione dei dati
 * Imposta il layout in base alle immagini 
+* Implementate funzionalità per la User Interface e feedbacks

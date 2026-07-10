@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { CV } from './cv_schema'
+import { agree, toast } from '../../../tools/feedbacksUI'
 
 
 definePageMeta({
@@ -23,32 +24,59 @@ const filteredCvs = computed(() => {
 })
 
 // SELEZIONE MULTIPLA
-const selectedCvs = ref<Set<number>>(new Set())
-
-function toggleSelection(cvId: number) {
-  if (selectedCvs.value.has(cvId)) {
-    selectedCvs.value.delete(cvId)
-  } else {
-    selectedCvs.value.add(cvId)
+const multiSelection = {
+  selectedCvs: ref<Set<number>>(new Set()),
+  
+  toggle(cvId: number) {
+    if (this.selectedCvs.value.has(cvId)) {
+      this.selectedCvs.value.delete(cvId)
+    } else {
+      this.selectedCvs.value.add(cvId)
+    }
+  },
+  
+  isSelected(cvId: number) {
+    return this.selectedCvs.value.has(cvId)
+  },
+  
+  clear() {
+    this.selectedCvs.value.clear()
+  },
+  
+  async delete() {
+    try {
+      const ids = Array.from(this.selectedCvs.value)
+      
+      // Fetch titles for all selected CVs
+      const titles = await Promise.all(
+        ids.map(async (id) => {
+          try {
+            const response = await $fetch<CV>(`/api/cv/${id}`)
+            return response?.title || `CV ID: ${id}`
+          } catch (error) {
+            console.error(`Errore durante il recupero del CV ${id}:`, error)
+            return `CV ID: ${id}`
+          }
+        })
+      )
+      
+      const titlesList = titles.map(t => `'${t}'`).join(', ')
+      const confirmed = await agree.danger(`Sei sicuro di voler eliminare ${titlesList}?`, 'Elimina')
+      if (!confirmed) return;
+      
+      await $fetch('/api/cv/batch-delete', {
+        method: 'POST',
+        body: { ids }
+      })
+      
+      this.clear()
+      await refreshNuxtData()
+      toast.success('CV eliminati')
+    
+    } catch (error) {
+      console.error('Errore durante l\'eliminazione multipla:', error)
+    }
   }
-}
-
-function isSelected(cvId: number) {
-  return selectedCvs.value.has(cvId)
-}
-
-function clearSelection() {
-  selectedCvs.value.clear()
-}
-
-const hasSelection = computed(() => selectedCvs.value.size > 0)
-
-function goToMultiDelete() {
-  const ids = Array.from(selectedCvs.value)
-  router.push({
-    path: '/cv/confirm_delete_multiple',
-    query: { ids: ids.join(',') }
-  })
 }
 
 async function addCv() {
@@ -80,11 +108,33 @@ async function addCv() {
     })
     // aggiorna lista cv
     await refreshNuxtData()
+    toast.success('CV creato')
     // naviga al cv appena creato
     router.push(`/cv/${new_cv_type}/${result.id}`)
     
   } catch (error) {
     console.error('Errore durante la creazione del CV:', error)
+  }
+}
+
+async function deleteSingleCV(cvId: number) {
+  try {
+    const response = await $fetch<CV>(`/api/cv/${cvId}`)
+    if (!response) return console.error('CV non trovato')
+    
+    const title = response.title || `CV ${cvId}`
+    
+    const confirmed = await agree.danger(`Sei sicuro di voler eliminare '${title}'?`, 'Elimina')
+    if (!confirmed) return console.error('Eliminazione annullata');
+    
+    await $fetch(`/api/cv/${cvId}`, {
+      method: 'DELETE'
+    })
+    await refreshNuxtData()
+    toast.success('CV eliminato')
+    
+  } catch (error) {
+    console.error('Errore durante l\'eliminazione:', error)
   }
 }
 
@@ -124,15 +174,15 @@ onMounted(()=>{
       </form>
 
       <!-- TOOLBAR -->
-      <div v-if="selectedCvs.size" class="col-12 col-md-6">
+      <div v-if="multiSelection.selectedCvs.value.size" class="col-12 col-md-6">
         <strong class="d-none d-md-inline">CV selezionati</strong>
         <div class="d-flex justify-content-between align-items-center">
-          <span>{{ selectedCvs.size }} selezionati</span>
+          <span>{{ multiSelection.selectedCvs.value.size }} selezionati</span>
           <div class="d-flex gap-2">
-            <button class="btn btn-secondary btn-sm" @click="clearSelection" title="Deseleziona tutti">
+            <button class="btn btn-secondary btn-sm" @click="multiSelection.clear" title="Deseleziona tutti">
               <i class="bi bi-x-lg"></i>
             </button>
-            <button class="btn btn-danger btn-sm" @click="goToMultiDelete">
+            <button class="btn btn-danger btn-sm" @click="multiSelection.delete">
               <i class="bi bi-trash"></i> 
             </button>
           </div>
@@ -141,7 +191,7 @@ onMounted(()=>{
     </div>
 
     <!-- CV CARDS -->
-    <div class="pb-5 row g-3 justify-content-center">
+    <div class="py-3 row g-3 justify-content-center">
       <div class="col-12">
         <div v-if="filteredCvs?.length === 0" class="alert alert-info">
           <i class="bi bi-info-circle"></i>  Nessun CV trovato
@@ -153,8 +203,8 @@ onMounted(()=>{
           <!-- CHECKBOX -->
           <div class="position-absolute top-0 start-0 p-2 z-index-1">
             <input type="checkbox" 
-                   :checked="cv.id !== undefined && isSelected(cv.id)"
-                   @change="cv.id !== undefined && toggleSelection(cv.id)"
+                   :checked="cv.id !== undefined && multiSelection.isSelected(cv.id)"
+                   @change="cv.id !== undefined && multiSelection.toggle(cv.id)"
                    class="form-check-input"
                    style="transform: scale(1.3);">
           </div>
@@ -179,10 +229,10 @@ onMounted(()=>{
                     </NuxtLink>
                   </li>
                   <li>
-                    <NuxtLink class="dropdown-item text-bg-danger" 
-                              :to="`/cv/confirm_delete/${cv.id}`">
+                    <button class="dropdown-item text-bg-danger" 
+                            @click="cv.id !== undefined && deleteSingleCV(cv.id)">
                       <i class="bi bi-trash"></i> Cancella
-                    </NuxtLink>
+                    </button>
                   </li>
                 </ul>
               </div>
@@ -203,3 +253,4 @@ onMounted(()=>{
   background: linear-gradient(to top, #000000cc, transparent) !important;
 }
 </style>
+
