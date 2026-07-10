@@ -62,6 +62,7 @@ const handleConfirm = async () => {
       <!-- BODY -->
       <div class="card-body text-bg-dark">
         <p class="card-text">{{ description }}</p>
+        <slot name="extra-content"></slot>
       </div>
       
       <!-- FOOTER -->

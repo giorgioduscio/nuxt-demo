@@ -1,51 +1,57 @@
-import { object, string, number, array, optional, type InferOutput } from 'valibot';
+import { object, string, number, array, optional, type InferOutput, union, literal } from 'valibot';
 
 // Schema completo del CV
 export const cvSchema = object({
   id: optional(number()),
-  type: optional(string()),
+  type: union([
+    literal('accademico'),
+    literal('classico'),
+    literal('creativo'),
+    literal('minimale'),
+    literal('moderno')
+  ]),
   
-  title: optional(string()),
-  subtitle: optional(string()),
-  description: optional(string()),
+  title: string(),
+  subtitle: string(),
+  description: string(),
   image: optional(string()),
   
-  birth_date: optional(string()),
-  email: optional(string()),
-  phone: optional(string()),
-  address: optional(string()),
+  birth_date: string(),
+  email: string(),
+  phone: string(),
+  address: string(),
   
-  contacts: optional(array(object({
+  contacts: array(object({
     title: string(),
     description: string()
-  }))),
-  soft_skills: optional(array(object({
+  })),
+  soft_skills: array(object({
     title: string(),
     description: string()
-  }))),
-  hobby: optional(array(object({
+  })),
+  hobby: array(object({
     title: string(),
     description: string()
-  }))),
+  })),
   
-  hard_skills: optional(array(object({
+  hard_skills: array(object({
     title: string(),
     level: string(),
     description: string()
-  }))),
-  lenguages: optional(array(object({
+  })),
+  lenguages: array(object({
     title: string(),
     level: string(),
     description: string()
-  }))),
+  })),
   
-  experiences: optional(array(object({
+  experiences: array(object({
     period: string(),
     company: string(),
     role: string(),
     start_date: string(),
     description: string()
-  })))
+  }))
 });
 
 // Tipo TypeScript derivato dallo schema

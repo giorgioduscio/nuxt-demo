@@ -55,7 +55,7 @@ export default defineEventHandler(async (event) => {
 
     const cv2 :CV = parse(cvSchema, {
       id: 2,
-      type: 'professionale',
+      type: 'accademico',
       title: 'Luigi Bianchi',
       subtitle: 'UX/UI Designer',
       description: 'Designer appassionato specializzato in interfacce web e mobile user-friendly e accessibili.',
