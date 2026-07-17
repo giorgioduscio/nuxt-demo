@@ -1,6 +1,9 @@
-<script setup>
+<script setup lang="ts">
+import customstyle from './assets/styles'
+
 onMounted(()=>{
   document.title = 'CV Manager'
+  customstyle()
 })
 </script>
 <style lang="sass">
