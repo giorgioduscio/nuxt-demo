@@ -1,3 +1,5 @@
+import { firebase_cv } from './_firebase_cv';
+
 export default defineEventHandler(async(event)=>{
   // 1) recupera l'id
   const id = getRouterParam(event, 'id');
@@ -5,6 +7,10 @@ export default defineEventHandler(async(event)=>{
     statusCode: 400,
     statusMessage: "ID mancante nell'URL",
   });
+  
+  if (firebase_cv.to_use(event)) {
+    return await firebase_cv.read_id(id);
+  }
 
   // 2) recupera il CV dal database
   const storage = useStorage('cv');

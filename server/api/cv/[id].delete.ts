@@ -1,3 +1,5 @@
+import { firebase_cv } from './_firebase_cv';
+
 export default defineEventHandler(async(event)=>{
   try {
     //1) Estrazione dell'id dall'URL
@@ -6,6 +8,10 @@ export default defineEventHandler(async(event)=>{
       statusCode: 400,
       statusMessage: "ID mancante nell'URL",
     });
+
+    if (firebase_cv.to_use(event)) {
+      return await firebase_cv.delete(id);
+    }
 
     //2) Cerchiamo il file corrispondente all'ID
     const storage = useStorage('cv');

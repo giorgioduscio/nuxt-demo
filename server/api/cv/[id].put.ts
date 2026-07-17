@@ -1,5 +1,6 @@
 import { cvSchema, type CV } from "~/pages/cv/cv_schema";
 import { safeParse } from 'valibot';
+import { firebase_cv } from './_firebase_cv';
 
 export default defineEventHandler(async(event)=>{
   try {
@@ -21,6 +22,10 @@ export default defineEventHandler(async(event)=>{
       });
     }
     const validatedData = result.output;
+
+    if (firebase_cv.to_use(event)) {
+      return await firebase_cv.update(id, validatedData);
+    }
 
     //3) Recupera l'oggetto
     const storage = useStorage('cv');
