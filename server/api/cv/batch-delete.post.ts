@@ -1,3 +1,5 @@
+import { firebase_cv } from './_firebase_cv';
+
 export default defineEventHandler(async(event)=>{
   try {
     //1) Estrazione degli IDs dal body della richiesta
@@ -9,6 +11,10 @@ export default defineEventHandler(async(event)=>{
         statusCode: 400,
         statusMessage: "IDs mancanti o non validi",
       });
+    }
+
+    if (firebase_cv.to_use(event)) {
+      return await firebase_cv.batchDelete(ids);
     }
 
     //2) Eliminazione multipla dei CV

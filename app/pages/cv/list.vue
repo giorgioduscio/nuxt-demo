@@ -158,9 +158,9 @@ onMounted(()=>{
   </div>
   
   <section class="container">
-    <div class="row g-3">
+    <div class="row g-3 justify-content-center">
       <!-- SEARCH -->
-      <form @submit.prevent class="col-12 col-md-6">
+      <form @submit.prevent class="col-12 col-md-4">
         <label for="filter-search">Filtra per titolo</label>
   
         <div class="input-group">
@@ -174,7 +174,7 @@ onMounted(()=>{
       </form>
 
       <!-- TOOLBAR -->
-      <div v-if="multiSelection.selectedCvs.value.size" class="col-12 col-md-6">
+      <div v-if="multiSelection.selectedCvs.value.size" class="col-12 col-md-4">
         <strong class="d-none d-md-inline">CV selezionati</strong>
         <div class="d-flex justify-content-between align-items-center">
           <span>{{ multiSelection.selectedCvs.value.size }} selezionati</span>

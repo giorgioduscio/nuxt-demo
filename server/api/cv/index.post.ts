@@ -1,5 +1,6 @@
 import { CV, cvSchema } from '~/pages/cv/cv_schema';
 import { safeParse } from 'valibot';
+import { firebase_cv } from './_firebase_cv';
 
 export default defineEventHandler(async(event)=>{
   try{
@@ -13,6 +14,10 @@ export default defineEventHandler(async(event)=>{
         statusMessage: "Dati non validi",
         cause: result.issues
       });
+    }
+
+    if (firebase_cv.to_use(event)) {
+      return await firebase_cv.create(result.output);
     }
     
     const storage = useStorage('cv');

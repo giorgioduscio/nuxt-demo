@@ -27,7 +27,7 @@ export function useCvDetail() {
   // Fetch del CV esistente se siamo in modalità edit
   let cv = reactive<CV>({
     id: 0,
-    type: '',
+    type: 'minimale',
     title: '',
     subtitle: '',
     description: '',
