@@ -43,6 +43,7 @@ const todos_completedCount = computed(() => todos.list.value.filter(t => t.compl
 onMounted(async () => {
   todos.list.value = await todosStore.read_all()
   document.title ='Todos';
+  console.log(todosStore.usedLocalstorage() ?'[Localstorage]' :'[API]');
 })
 definePageMeta({
   title: 'Todos',
