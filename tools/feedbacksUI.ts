@@ -669,3 +669,23 @@ const Popover = {
   },
 };
 
+
+/**
+ * 
+ * @param callback Funzione da eseguire dopo il delay
+ * @param delay Ritardo in millisecondi
+ * @returns 
+ * Esegue la funzione dopo il delay solo se non viene chiamata nuovamente entro quel tempo
+ */
+export function debounce<T extends (...args: any[]) => any>(callback: T, delay: number) {
+  if(typeof callback !== 'function' || typeof delay !== 'number' || delay < 0) {
+    console.error('Callback must be a function and delay must be a positive number')
+    return (() => {}) as any
+  }
+  // Crea un timer per gestire il delay
+  let timer: ReturnType<typeof setTimeout> | null = null
+  return (...args: Parameters<T>) => { // recupera tutti gli args 
+    if (timer) clearTimeout(timer) // cancella il timer se esiste
+    timer = setTimeout(() => callback(...args), delay) // esegue la callback dopo il delay
+  }
+}

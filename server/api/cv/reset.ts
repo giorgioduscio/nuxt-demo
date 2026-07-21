@@ -1,4 +1,4 @@
-import { CV, cvSchema } from '~/pages/cv/cv_schema';
+import { CV, cvSchema } from '~/pages/cv/_cv_schema';
 import { parse } from 'valibot';
 
 export default defineEventHandler(async (event) => {

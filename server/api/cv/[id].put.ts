@@ -1,4 +1,4 @@
-import { cvSchema, type CV } from "~/pages/cv/cv_schema";
+import { cvSchema, type CV } from "~/pages/cv/_cv_schema";
 import { safeParse } from 'valibot';
 import { firebase_cv } from './_firebase_cv';
 

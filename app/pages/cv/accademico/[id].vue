@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { useCvDetail } from '../_detail'
+import { useCvMain } from '../_cv_main'
 import CvToolbar from '../_toolbar.vue'
 
-const { cv, form, list, isPreview, GDPR_TEXT } = useCvDetail()
+const { cv, form, list, isPreview, GDPR_TEXT } = useCvMain()
 </script>
 
 <template>

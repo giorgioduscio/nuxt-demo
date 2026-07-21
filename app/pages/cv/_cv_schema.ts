@@ -1,15 +1,17 @@
 import { object, string, number, array, optional, type InferOutput, union, literal } from 'valibot';
 
-// Schema completo del CV
+// Schema completo del 
+export const CV_TYPE = [
+  'accademico',
+  'classico',
+  'creativo',
+  'minimale',
+  'moderno'
+] as const;
+
 export const cvSchema = object({
   id: optional(number()),
-  type: union([
-    literal('accademico'),
-    literal('classico'),
-    literal('creativo'),
-    literal('minimale'),
-    literal('moderno')
-  ]),
+  type: union( CV_TYPE.map(type => literal(type)) ),
   
   title: string(),
   subtitle: string(),

@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import type { FormField } from '~/components/formField_schema';
+import { CV_TYPE } from './_cv_schema';
+
 const props = defineProps<{
   isPreview: boolean,
   form: any,
@@ -9,17 +12,14 @@ const props = defineProps<{
 const router = useRouter()
 const printCV =()=> window.print()
 
-const cvTypes = [
-  { label: 'Minimale', value: 'minimale' },
-  { label: 'Classico', value: 'classico' },
-  { label: 'Moderno', value: 'moderno' },
-  { label: 'Creativo', value: 'creativo' },
-  { label: 'Accademico', value: 'accademico' },
-]
+const cvTypes = CV_TYPE.map(type => ({
+  value: type,
+  label: type.charAt(0).toUpperCase() + type.slice(1)
+}))
 
 async function changeCvType(newType: string) {
   // Aggiorna il campo type nel form
-  const typeField = props.form.fields.find((f: any) => f.key === 'type')
+  const typeField = props.form.fields.value.find((f: FormField) => f.key === 'type')
   if (typeField) {
     typeField.value = newType
     // Salva le modifiche
@@ -28,11 +28,16 @@ async function changeCvType(newType: string) {
   // Reindirizza alla nuova route
   router.push(`/cv/${newType}/${props.cvId}`)
 }
+
+const toolbarBorderClass = computed(() => {
+  return props.isPreview ? '' 
+          :'border-success border-bottom border-3'
+})
 </script>
 
 <template>
   <div data-toolbar class="sticky-top py-2 text-bg-light shadow-sm" style="top: 3.5rem"
-          :class="{'border-success border-bottom border-3': !isPreview}">
+          :class="toolbarBorderClass">
     <div class="px-2 d-flex gap-1 align-items-center">
         
       <NuxtLink :to="'/cv/list'" class="p-1 btn btn-sm btn-outline-dark">

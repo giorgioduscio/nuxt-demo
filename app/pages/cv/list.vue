@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CV } from './cv_schema'
+import type { CV } from './_cv_schema'
 import { agree, toast } from '../../../tools/feedbacksUI'
 
 
@@ -80,37 +80,20 @@ const multiSelection = {
 }
 
 async function addCv() {
-  const new_cv_type ='minimale';
+  const new_cv_type = 'minimale';
   
   try {
-    // crea cv vuoto
-    const new_cv: CV = {
-      type: new_cv_type,
-      title: 'document_' + Date.now(),
-      subtitle: '',
-      description: '',
-      image: '',
-      birth_date: '',
-      email: Date.now() + '@example.com',
-      phone: '',
-      address: '',
-      contacts: [],
-      soft_skills: [],
-      hobby: [],
-      hard_skills: [],
-      lenguages: [],
-      experiences: []
-    }
-    // salva cv su db
-    const result = await $fetch<CV>('/api/cv', {
+    // Chiama il nuovo endpoint generate che crea il CV senza validazione
+    const result_db = await $fetch<CV>('/api/cv/generate', {
       method: 'POST',
-      body: new_cv
+      body: { type: new_cv_type }
     })
+    
     // aggiorna lista cv
     await refreshNuxtData()
     toast.success('CV creato')
     // naviga al cv appena creato
-    router.push(`/cv/${new_cv_type}/${result.id}`)
+    router.push(`/cv/${new_cv_type}/${result_db.id}`)
     
   } catch (error) {
     console.error('Errore durante la creazione del CV:', error)

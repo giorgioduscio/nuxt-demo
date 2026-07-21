@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { useCvDetail } from '../_detail'
+import { useCvMain } from '../_cv_main'
 import CvToolbar from '../_toolbar.vue'
 
-const { cv, form, list, isPreview, GDPR_TEXT } = useCvDetail()
+const { cv, form, list, isPreview, GDPR_TEXT } = useCvMain()
 </script>
 
 <template>
-  <section class="container" style="max-width: 20cm; min-height: 20cm;">
+  <section class="pb-5 container" style="max-width: 20cm; min-height: 20cm;">
 
     <!-- TOOLBAR -->
     <CvToolbar :is-preview="isPreview" 
-                :form="form" 
+                :form="{...form}" 
                 :cvType="cv.type"
                 :cv-id="$route.params.id as string"/>
 
@@ -27,8 +27,11 @@ const { cv, form, list, isPreview, GDPR_TEXT } = useCvDetail()
                 style="width: 6cm; height: 6cm"></div>
   
           <Field v-if="!isPreview" field-key="image"
-                  :value="form.fields_obj.value.image?.value"
-                  :label="form.fields_obj.value.image?.label"
+                  :value="form.fields_obj.image?.value"
+                  :label="form.fields_obj.image?.label"
+                  :asterisk="form.fields_obj.image?.asterisk"
+                  :validation="form.fields_obj.image?.validation as (val: any) => boolean"
+                  :error-message="form.fields_obj.image?.errorMessage"
                   input_class="form-control-sm"/>
         </div>
           
@@ -36,26 +39,32 @@ const { cv, form, list, isPreview, GDPR_TEXT } = useCvDetail()
           <!-- Title -->
           <h1 v-if="isPreview" class="fs-3">{{ cv?.title }}</h1>
           <Field v-else field-key="title"
-                  :value="form.fields_obj.value.title?.value"
-                  :hidden_label="form.fields_obj.value.title?.label"
-                  :asterisk="form.fields_obj.value.title?.asterisk"
-                  :validation="form.fields_obj.value.title?.validation as (val: any) => boolean"
-                  :error-message="form.fields_obj.value.title?.errorMessage"
+                  :value="form.fields_obj.title?.value"
+                  :hidden_label="form.fields_obj.title?.label"
+                  :asterisk="form.fields_obj.title?.asterisk"
+                  :validation="form.fields_obj.title?.validation as (val: any) => boolean"
+                  :error-message="form.fields_obj.title?.errorMessage"
                   input_class="fs-3"/>
           
           <!-- Subtitle -->
           <h3 v-if="isPreview" class="fs-5 mt-2 pt-2 border-top border-dark">{{ cv?.subtitle }}</h3>
           <Field v-else field-key="subtitle"
-                  :value="form.fields_obj.value.subtitle?.value"
-                  :hidden_label="form.fields_obj.value.subtitle?.label"
+                  :value="form.fields_obj.subtitle?.value"
+                  :hidden_label="form.fields_obj.subtitle?.label"
+                  :asterisk="form.fields_obj.subtitle?.asterisk"
+                  :validation="form.fields_obj.subtitle?.validation as (val: any) => boolean"
+                  :error-message="form.fields_obj.subtitle?.errorMessage"
                   input_class="fs-5"
                   class="mt-2 pt-2 border-top border-dark"/>
           
           <!-- Description -->
           <p v-if="isPreview">{{ cv?.description }}</p>
           <Field v-else field-key="description"
-                  :value="form.fields_obj.value.description?.value"
-                  :hidden_label="form.fields_obj.value.description?.label"
+                  :value="form.fields_obj.description?.value"
+                  :hidden_label="form.fields_obj.description?.label"
+                  :asterisk="form.fields_obj.description?.asterisk"
+                  :validation="form.fields_obj.description?.validation as (val: any) => boolean"
+                  :error-message="form.fields_obj.description?.errorMessage"
                   type="textarea" :rows="5"
                   input_class="form-control-sm"/>
         </div>
@@ -86,6 +95,11 @@ const { cv, form, list, isPreview, GDPR_TEXT } = useCvDetail()
               </template>
             </div>
             <template v-else>
+              <div v-if="!cv.hard_skills.length" class="text-center text-danger">
+                <i class="bi bi-exclamation-triangle"></i>
+                Nessuna hard skill aggiunta
+              </div>
+              
               <div v-for="(hs, index) in cv?.hard_skills" class="d-grid gap-1 align-items-start" 
                     style="grid-template-columns: auto 1fr 1fr 2fr;">
                 <button @click="list.remove('hard_skills', index)" 
@@ -130,25 +144,34 @@ const { cv, form, list, isPreview, GDPR_TEXT } = useCvDetail()
             
             <template v-else>
               <Field inline field-key="birth_date"
-                    :value="form.fields_obj.value.birth_date?.value"
-                    :label="form.fields_obj.value.birth_date?.label"
+                    :value="form.fields_obj.birth_date?.value"
+                    :label="form.fields_obj.birth_date?.label"
+                    :asterisk="form.fields_obj.birth_date?.asterisk"
+                    :validation="form.fields_obj.birth_date?.validation as (val: any) => boolean"
+                    :error-message="form.fields_obj.birth_date?.errorMessage"
                     type="date"
                     input_class="form-control-sm"/>
               <Field inline field-key="email"
-                    :value="form.fields_obj.value.email?.value"
-                    :label="form.fields_obj.value.email?.label"
+                    :value="form.fields_obj.email?.value"
+                    :label="form.fields_obj.email?.label"
                     type="email"
-                    :asterisk="form.fields_obj.value.email?.asterisk"
-                    :validation="form.fields_obj.value.email?.validation as (val: any) => boolean"
-                    :error-message="form.fields_obj.value.email?.errorMessage"
+                    :asterisk="form.fields_obj.email?.asterisk"
+                    :validation="form.fields_obj.email?.validation as (val: any) => boolean"
+                    :error-message="form.fields_obj.email?.errorMessage"
                     input_class="form-control-sm"/>
               <Field inline field-key="address"
-                    :value="form.fields_obj.value.address?.value"
-                    :label="form.fields_obj.value.address?.label"
+                    :value="form.fields_obj.address?.value"
+                    :label="form.fields_obj.address?.label"
+                    :asterisk="form.fields_obj.address?.asterisk"
+                    :validation="form.fields_obj.address?.validation as (val: any) => boolean"
+                    :error-message="form.fields_obj.address?.errorMessage"
                     input_class="form-control-sm"/>
               <Field inline field-key="phone"
-                    :value="form.fields_obj.value.phone?.value"
-                    :label="form.fields_obj.value.phone?.label"
+                    :value="form.fields_obj.phone?.value"
+                    :label="form.fields_obj.phone?.label"
+                    :asterisk="form.fields_obj.phone?.asterisk"
+                    :validation="form.fields_obj.phone?.validation as (val: any) => boolean"
+                    :error-message="form.fields_obj.phone?.errorMessage"
                     input_class="form-control-sm"/>
 
               <div v-for="(contact, index) in cv?.contacts" class="py-1 d-grid gap-1 align-items-start" 
@@ -174,7 +197,8 @@ const { cv, form, list, isPreview, GDPR_TEXT } = useCvDetail()
           </div>
         
   
-          <div class="mt-4 pt-2 border-top border-primary"> <!-- SOFT SKILLS -->
+          <!-- SOFT SKILLS -->
+          <div class="mt-4 pt-2 border-top border-primary"> 
             <div class="d-flex justify-content-between align-items-center"> 
               <h4 class="text-truncate text-primary">
                 <i class="bi bi-heart"></i> 
@@ -194,6 +218,11 @@ const { cv, form, list, isPreview, GDPR_TEXT } = useCvDetail()
               </template>
             </div>
             <template v-else>
+              <div v-if="!cv.soft_skills.length" class="text-center text-danger">
+                <i class="bi bi-exclamation-triangle"></i>
+                Nessuna soft skill aggiunta
+              </div>
+              
               <div v-for="(ss, index) in cv?.soft_skills" 
                     class="d-grid gap-1 align-items-start" 
                     style="grid-template-columns: auto 1fr 2fr;">
@@ -219,7 +248,8 @@ const { cv, form, list, isPreview, GDPR_TEXT } = useCvDetail()
         
   
         <div class="col-12 col-sm-6"> 
-          <div class="mt-4 pt-2 border-top border-primary"> <!-- LINGUAGGI -->
+          <!-- LINGUAGGI -->
+          <div class="mt-4 pt-2 border-top border-primary"> 
             <div class="d-flex justify-content-between align-items-center"> 
               <h4 class="text-truncate text-primary">
                 <i class="bi bi-translate"></i> 
@@ -243,6 +273,11 @@ const { cv, form, list, isPreview, GDPR_TEXT } = useCvDetail()
               </div>
             </template>
             <template v-else>
+              <div v-if="!cv.lenguages.length" class="text-center text-danger">
+                <i class="bi bi-exclamation-triangle"></i>
+                Nessun linguaggio aggiunto
+              </div>
+              
               <div v-for="(lenguage, index) in cv?.lenguages" 
                     class="d-grid gap-1 align-items-start" 
                     style="grid-template-columns: auto 1fr 1fr 2fr;">
@@ -282,6 +317,11 @@ const { cv, form, list, isPreview, GDPR_TEXT } = useCvDetail()
               </div>
             </template>
             <template v-else>
+              <div v-if="!cv.experiences.length" class="text-center text-danger">
+                <i class="bi bi-exclamation-triangle"></i>
+                Nessuna esperienza aggiunta
+              </div>
+              
               <div v-for="(exp, index) in cv?.experiences" 
                     class="py-2 d-flex gap-1 align-items-start">
                 <button @click="list.remove('experiences', index)" 

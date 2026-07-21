@@ -31,3 +31,12 @@
     </div>
   </footer>
 </template>
+
+<style scoped>
+@media print {
+  footer {
+    display: none !important;
+  }
+}
+</style>
+
