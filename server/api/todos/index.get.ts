@@ -1,15 +1,16 @@
+import prisma from '/app/server/lib/prisma'
 
 export default defineEventHandler(async (event) => {
-  try{
-    const storage = useStorage('todos');
-    const keys = await storage.getKeys();
-    
-    // Accediamo allo storage configurato in nuxt.config.ts
-    const todos = await Promise.all(
-      keys.map(key => storage.getItem(key))
-    );
-
-    return todos || [];
-    
-  } catch(e){ throw e }
-});
+  try {
+    const todos = await prisma.todo.findMany({
+      orderBy: { createdAt: 'desc' }
+    })
+    return todos
+  } catch (e) {
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'Errore durante il recupero dei todos',
+      cause: e
+    })
+  }
+})

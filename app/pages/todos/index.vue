@@ -3,6 +3,7 @@ import type { Todo } from './_todos_schema'
 import { TodoSchema } from './_todos_schema'
 import { safeParse } from 'valibot'
 import { todosStore } from './todosStore';
+import { toast } from '~~/tools/feedbacksUI';
 
 const todos ={
   list: ref<Todo[]>([]),
@@ -28,40 +29,57 @@ const todos ={
     !todos.parsed_todo.value.success // campo invalido
   ),
 
-  handleAdd(){    
+  // CREATE
+  async handleAdd(){    
     todos.submittedOnce.value = true
     if (!todos.parsed_todo.value.success) {
       return console.error('Validation failed');
     }
     
-    todosStore.create(todos.input.value)
-    .then((newTodo)=>{
-      todos.list.value.push(newTodo);
-      todos.handleReset();
-    })
-    .catch(e=> console.error(e))
+    const newTodo = await todosStore.create(todos.input.value)
+    todos.list.value.push(newTodo);
+    toast.success('Todo created');
+    todos.handleReset();
   },
 
-  async handleDelete(id: number){
-    await todosStore.delete(id)
-    todos.list.value = todos.list.value.filter(t => t.id !== id)
+  // UPDATE
+  async handleUpdate(todo:Todo){
+    await todosStore.update(todo);
+    toast.success('Todo updated');
   },
 
-  async handleToggle(id: number){
+  async handleToggle(id: number | undefined){
+    if(!id) return console.error('Todo senza ID');
+
     const target = todos.list.value.find(t => t.id === id);
     if (!target) return console.error("Todo non trovato");
     
     target.completed = !target.completed;
     await todosStore.update(target)
+    toast.success('Todo updated');
   },
   
   async clearCompleted(){
     const targets = todos.list.value.filter(t => t.completed);
     for(const todo of targets){
+      if(!todo.id){
+        console.error('Todo senza ID');
+        continue;
+      }
       await todosStore.delete(todo.id);
     }
-    todos.list.value = todos.list.value.filter(t => !t.completed)
-  }
+    todos.list.value = todos.list.value.filter(t => !t.completed);
+    toast.success('Completed todos cleared');
+  },
+
+  // DELETE
+  async handleDelete(id: number | undefined){
+    if(!id) return console.error('Todo senza ID');
+    
+    await todosStore.delete(id)
+    todos.list.value = todos.list.value.filter(t => t.id !== id);
+    toast.success('Todo deleted');
+  },
 }
 
 const todos_completedCount = computed(() => todos.list.value.filter(t => t.completed).length)
@@ -75,8 +93,8 @@ definePageMeta({
   description: 'Lista dei Todo',
   icon: 'list'
 })
-</script>
 
+</script>
 <template>
   <section>
     <!-- HEADER -->
@@ -85,8 +103,9 @@ definePageMeta({
         <h3>My Tasks</h3>
       </div>
     </div>
+
     
-    <!-- INPUT -->
+    <!-- FORM -->
     <div class="container max-w-500px">
       <div class="mb-3 shadow rounded overflow-hidden bg-light">
         <form @submit.prevent="todos.handleAdd" class="d-flex">
@@ -113,6 +132,7 @@ definePageMeta({
       </div>
     </div>
     
+
     <!-- LIST -->
     <div class="container mb-3 max-w-500px">
       <div v-if="todos.list.value.length === 0" class="m-0 alert alert-warning text-center">
@@ -138,7 +158,8 @@ definePageMeta({
                 class="form-control form-control-sm"
                 :name="todo.id+'-text'" 
                 :id="todo.id+'-text'" 
-                @blur="todosStore.update(todo)"
+                @blur="todos.handleUpdate(todo)"
+                @keyup.enter="todos.handleUpdate(todo)"
                 v-model="todo.text">
 
           <button @click="todos.handleDelete(todo.id)" class="btn btn-danger btn-sm">
@@ -147,6 +168,7 @@ definePageMeta({
         </li>
       </ul>
     </div>
+
 
     <!-- FOOTER -->
     <div class="mb-3 container max-w-500px">

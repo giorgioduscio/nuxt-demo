@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import customstyle from './assets/styles'
 
-onMounted(()=>{
+
+onBeforeMount(()=>{
   document.title = 'CV Manager'
   customstyle()
 })

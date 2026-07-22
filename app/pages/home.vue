@@ -78,6 +78,16 @@ const tools: Tool[] = [
     icon: "bi-check-square"
   },
   {
+    title: "Prisma ORM",
+    description: "ORM moderno per gestione database PostgreSQL con TypeScript type-safe.",
+    icon: "bi-database"
+  },
+  {
+    title: "PostgreSQL",
+    description: "Database relazionale robusto per persistenza dati e query complesse.",
+    icon: "bi-server"
+  },
+  {
     title: "Docker",
     description: "Containerizzazione per ambienti di sviluppo e produzione isolati e riproducibili.",
     icon: "bi-boxes"
@@ -86,7 +96,7 @@ const tools: Tool[] = [
 
 definePageMeta({
   title: 'Home',
-  description: 'Genera, visualizza e scarica CV digitali e stampabili con Nuxt 4 e Vue 3.',
+  description: 'Genera, visualizza e scarica CV digitali e stampabili con Nuxt 4, Vue 3, Prisma ORM e PostgreSQL.',
   icon: 'home'
 });
 </script>

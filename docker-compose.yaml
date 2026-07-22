@@ -1,9 +1,31 @@
+volumes:
+  node_modules:
+  postgres_data:
+
+ 
 services:
-  nuxt-vue-demo:
+  nuxt-vue-db:
+    image: postgres:15
+    container_name: nuxt-vue-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: nuxt_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  nuxt-vue-app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: nuxt-vue-demo
+    container_name: nuxt-vue-app
     ports:
       - "3000:3000"
     volumes:
@@ -13,7 +35,6 @@ services:
       - NODE_ENV=development
       - CHOKIDAR_USEPOLLING=true
       - WATCHPACK_POLLING=true
+      - DATABASE_URL=postgresql://postgres:postgres@nuxt-vue-db:5432/nuxt_db
     restart: unless-stopped
 
-volumes:
-  node_modules:
