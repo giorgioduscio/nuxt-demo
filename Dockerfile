@@ -2,7 +2,7 @@
 FROM node:22-alpine
 
 # Installa le dipendenze di sistema necessarie
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat openssl
 
 # Crea la directory di lavoro
 WORKDIR /app
