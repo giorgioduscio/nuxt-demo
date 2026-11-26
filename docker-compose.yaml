@@ -2,7 +2,6 @@ volumes:
   node_modules:
   postgres_data:
 
- 
 services:
   nuxt-vue-db:
     image: postgres:15
@@ -36,5 +35,8 @@ services:
       - CHOKIDAR_USEPOLLING=true
       - WATCHPACK_POLLING=true
       - DATABASE_URL=postgresql://postgres:postgres@nuxt-vue-db:5432/nuxt_db
+    depends_on:
+      nuxt-vue-db:
+        condition: service_healthy
+    command: sh -c "npm install && npx prisma generate && npm run dev"
     restart: unless-stopped
-
