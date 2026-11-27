@@ -16,3 +16,12 @@ model Todo {
   completed Boolean  @default(false)
   createdAt DateTime @default(now())
 }
+
+model Document {
+  id        Int      @id @default(autoincrement())
+  docId     String   @unique
+  title     String
+  sections  String   // JSON della struttura completa
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
